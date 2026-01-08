@@ -1,0 +1,22 @@
+# Dockerfile.dev
+FROM gradle:8.14.3-jdk21-alpine
+
+WORKDIR /app
+
+# 1. Gradle 설정
+COPY gradle gradle
+COPY gradlew build.gradle settings.gradle ./
+
+# 2. 의존성 캐싱
+RUN ./gradlew dependencies --no-daemon
+
+# 3. 소스 복사 (볼륨이 덮어씀)
+COPY src ./src
+
+# 4. 빌드 캐시 생성 (선택)
+RUN ./gradlew compileJava --no-daemon || true
+
+EXPOSE 8080
+
+# 5. DevTools로 실행
+CMD ["./gradlew", "bootRun"]
