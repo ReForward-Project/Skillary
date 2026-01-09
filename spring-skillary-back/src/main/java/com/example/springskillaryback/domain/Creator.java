@@ -14,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.annotation.LastModifiedBy;
 
 import java.time.LocalDateTime;
@@ -33,7 +34,7 @@ public class Creator {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Byte creatorId;
 
-	@Column(nullable = false, unique = true)
+	@Column(length = 100, nullable = false, unique = true)
 	private String displayName;
 
 	private String profile;
@@ -44,7 +45,7 @@ public class Creator {
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 
-	@LastModifiedBy
+	@UpdateTimestamp
 	private LocalDateTime updatedAt;
 
 	@OneToOne(orphanRemoval = true)

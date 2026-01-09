@@ -25,7 +25,7 @@ public class SubscriptionPlan {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Byte planId;
 
-	@Column(nullable = false)
+	@Column(nullable = false, length = 100)
 	private String name;
 
 	@Column(nullable = false)

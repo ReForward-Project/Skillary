@@ -1,5 +1,6 @@
 package com.example.springskillaryback.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -28,14 +29,18 @@ public class CreatorSettlement {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Byte creatorSettlementId;
 
+	@Column(nullable = false)
 	private int grossAmount;
 
+	@Column(nullable = false)
 	private int platformFee;
 
+	@Column(nullable = false)
 	private int payoutAmount;
 
     @Builder.Default
 	@Enumerated(STRING)
+    @Column(length = 20)
 	private SettlementStatusEnum settlementStatus = SettlementStatusEnum.CALCULATING;
 
 	@CreationTimestamp

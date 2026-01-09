@@ -32,10 +32,11 @@ public class Post {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Byte postId;
 
-	@Column(nullable = false)
+	@Column(length = 100, nullable = false)
 	private String title;
 
 	@Enumerated(STRING)
+	@Column(length = 50, nullable = false)
 	private CategoryEnum category;
 
 	@CreationTimestamp

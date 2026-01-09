@@ -1,5 +1,6 @@
 package com.example.springskillaryback.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -31,16 +32,15 @@ public class Subscribe {
 
     @Builder.Default
 	@Enumerated(STRING)
+    @Column(length = 20, nullable = false)
 	private SubscribeStatusEnum subscribeStatus = SubscribeStatusEnum.INACTIVE;
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 
-    @Builder.Default
-	private LocalDateTime startAt = null;
+	private LocalDateTime startAt;
 
-    @Builder.Default
-	private LocalDateTime endAt = null;
+	private LocalDateTime endAt;
 
 	@ManyToOne
 	@JoinColumn(name = "plan_id", nullable = false)

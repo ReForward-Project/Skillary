@@ -1,5 +1,6 @@
 package com.example.springskillaryback.domain;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
@@ -34,16 +35,15 @@ public class SettlementRun {
 
     @Builder.Default
 	@Enumerated(STRING)
+    @Column(length = 20, nullable = false)
 	private RunStatusEnum runStatus = RunStatusEnum.READY;
 
-	@CreationTimestamp
+	@Column(nullable = false)
 	private LocalDate periodStart;
 
-    @Builder.Default
-	private LocalDate periodEnd = null;
+	private LocalDate periodEnd;
 
-    @Builder.Default
-	private LocalDateTime executedAt = null;
+	private LocalDateTime executedAt;
 
     @Builder.Default
 	@OneToMany

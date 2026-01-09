@@ -24,6 +24,6 @@ public class Role {
 	private Byte roleId;
 
 	@Enumerated(STRING)
-	@Column(unique = true)
+	@Column(length = 50, nullable = false, unique = true)
 	private RoleEnum role;
 }

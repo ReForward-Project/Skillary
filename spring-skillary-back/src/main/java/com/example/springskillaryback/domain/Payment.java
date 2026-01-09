@@ -38,10 +38,12 @@ public class Payment {
 
     @Builder.Default
 	@Enumerated(STRING)
+    @Column(length = 20, nullable = false)
 	private CreditMethodEnum creditMethod = CreditMethodEnum.CARD;
 
     @Builder.Default
 	@Enumerated(STRING)
+    @Column(length = 20, nullable = false)
 	private CreditStatusEnum creditStatus = CreditStatusEnum.READY;
 
     @Builder.Default
