@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader } from './ui/card';
 import { Badge } from './ui/badge';
 import { ImageWithFallback } from './figma/ImageWithFallback';
@@ -5,9 +6,19 @@ import { formatCurrency, formatDate, truncateText } from '../utils/formatters';
 import { getContentAccessBadgeVariant, getContentAccessLabel } from '../utils/helpers';
 import { CONTENT_ACCESS_TYPE } from '../config/constants';
 import { getCreatorById } from '@/lib/creatorRepo';
+import { getCommentCountByContent } from '@/lib/commentsRepo';
 
 export function ContentCard({ content, onClick }) {
   const creator = getCreatorById(content.creatorId);
+  const [commentCount, setCommentCount] = useState(0);
+
+  useEffect(() => {
+    if (!content?.id) return;
+    const refresh = () => setCommentCount(getCommentCountByContent(content.id));
+    refresh();
+    window.addEventListener('skillary:comments-changed', refresh);
+    return () => window.removeEventListener('skillary:comments-changed', refresh);
+  }, [content?.id]);
 
   const getAccessBadge = () => {
     const variant = getContentAccessBadgeVariant(content.accessType);
@@ -63,9 +74,10 @@ export function ContentCard({ content, onClick }) {
           )}
           <span className="text-muted-foreground">{creator?.displayName || '알 수 없음'}</span>
         </div>
-        <span className="text-muted-foreground text-xs">
-          {formatDate(content.createdAt)}
-        </span>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline">댓글 {commentCount}</Badge>
+          <span className="text-muted-foreground text-xs">{formatDate(content.createdAt)}</span>
+        </div>
       </CardFooter>
     </Card>
   );

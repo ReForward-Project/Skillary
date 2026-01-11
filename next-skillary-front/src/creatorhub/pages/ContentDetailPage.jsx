@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Lock, CreditCard } from 'lucide-react';
 import { Button } from '../components/ui/button';
 import { Card, CardContent } from '../components/ui/card';
 import { Badge } from '../components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '../components/ui/dialog';
 import { Separator } from '../components/ui/separator';
+import { Textarea } from '../components/ui/textarea';
 import { mockSubscriptions, mockPurchases } from '../utils/mockData';
 import { useAuth } from '../context/AuthContext';
 import { ImageWithFallback } from '../components/figma/ImageWithFallback';
@@ -13,7 +14,8 @@ import { ROUTES, getCreatorProfilePath } from '../config/routes';
 import { getContentAccessLabel } from '../utils/helpers';
 import { getVideoEmbedInfo, parseContentBody } from '../utils/contentBlocks';
 import { getContentById } from '@/lib/contentRepo';
-import { getCreatorById, listPlansByCreator } from '@/lib/creatorRepo';
+import { getCreatorById, getCreatorByUserId, listPlansByCreator } from '@/lib/creatorRepo';
+import { addComment, deleteComment, listCommentsByContent, toggleCommentLike } from '@/lib/commentsRepo';
 
 export function ContentDetailPage({ contentId, onNavigate }) {
   const { user } = useAuth();
@@ -21,6 +23,13 @@ export function ContentDetailPage({ contentId, onNavigate }) {
   const creator = content ? getCreatorById(content.creatorId) : null;
   const [showSubscribeDialog, setShowSubscribeDialog] = useState(false);
   const [showPurchaseDialog, setShowPurchaseDialog] = useState(false);
+  const [comments, setComments] = useState([]);
+  const [commentBody, setCommentBody] = useState('');
+  const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+  const [sortOrder, setSortOrder] = useState('newest'); // newest | oldest
+  const [replyToId, setReplyToId] = useState(null);
+  const [replyBody, setReplyBody] = useState('');
+  const [isSubmittingReply, setIsSubmittingReply] = useState(false);
 
   if (!content || !creator) {
     return (
@@ -68,6 +77,150 @@ export function ContentDetailPage({ contentId, onNavigate }) {
     }
     onNavigate(`${ROUTES.PAYMENT_CONTENT}?contentId=${content.id}`);
   };
+
+  useEffect(() => {
+    if (!content?.id) return;
+    const order = sortOrder === 'newest' ? 'desc' : 'asc';
+    setComments(listCommentsByContent(content.id, { order }));
+    const handler = () => {
+      const order = sortOrder === 'newest' ? 'desc' : 'asc';
+      setComments(listCommentsByContent(content.id, { order }));
+    };
+    window.addEventListener('skillary:comments-changed', handler);
+    return () => window.removeEventListener('skillary:comments-changed', handler);
+  }, [content?.id, sortOrder]);
+
+  const refreshComments = () => {
+    if (!content?.id) return;
+    const order = sortOrder === 'newest' ? 'desc' : 'asc';
+    setComments(listCommentsByContent(content.id, { order }));
+  };
+
+  const handleAddComment = async () => {
+    if (!content?.id) return;
+    if (!canViewFullContent) {
+      toast.error('전체 콘텐츠를 열람한 뒤 댓글을 작성할 수 있어요.');
+      return;
+    }
+    if (!user) {
+      toast.error('로그인이 필요합니다.');
+      onNavigate(ROUTES.LOGIN);
+      return;
+    }
+    const body = commentBody.trim();
+    if (!body) {
+      toast.error('댓글을 입력해주세요.');
+      return;
+    }
+
+    setIsSubmittingComment(true);
+    try {
+      const created = addComment({
+        contentId: content.id,
+        userId: user.id,
+        authorName: user.nickname,
+        body,
+      });
+      if (!created) {
+        toast.error('댓글 작성에 실패했습니다.');
+        return;
+      }
+      setCommentBody('');
+      refreshComments();
+      toast.success('댓글이 등록되었습니다.');
+    } finally {
+      setIsSubmittingComment(false);
+    }
+  };
+
+  const handleAddReply = async (parentId) => {
+    if (!content?.id) return;
+    if (!canViewFullContent) {
+      toast.error('전체 콘텐츠를 열람한 뒤 답글을 작성할 수 있어요.');
+      return;
+    }
+    if (!user) {
+      toast.error('로그인이 필요합니다.');
+      onNavigate(ROUTES.LOGIN);
+      return;
+    }
+    const body = replyBody.trim();
+    if (!body) {
+      toast.error('답글을 입력해주세요.');
+      return;
+    }
+    setIsSubmittingReply(true);
+    try {
+      const created = addComment({
+        contentId: content.id,
+        userId: user.id,
+        authorName: user.nickname,
+        body,
+        parentId,
+      });
+      if (!created) {
+        toast.error('답글 작성에 실패했습니다.');
+        return;
+      }
+      setReplyBody('');
+      setReplyToId(null);
+      refreshComments();
+      toast.success('답글이 등록되었습니다.');
+    } finally {
+      setIsSubmittingReply(false);
+    }
+  };
+
+  const handleDeleteComment = (comment) => {
+    if (!comment?.id) return;
+    if (!user) {
+      toast.error('로그인이 필요합니다.');
+      onNavigate(ROUTES.LOGIN);
+      return;
+    }
+    const canDelete = user.role === 'ADMIN' || user.id === comment.userId;
+    if (!canDelete) {
+      toast.error('본인 댓글만 삭제할 수 있습니다.');
+      return;
+    }
+    const ok = deleteComment(comment.id);
+    if (ok) {
+      refreshComments();
+      toast.success('댓글이 삭제되었습니다.');
+    }
+  };
+
+  const handleToggleLike = (commentId) => {
+    if (!user) {
+      toast.error('로그인이 필요합니다.');
+      onNavigate(ROUTES.LOGIN);
+      return;
+    }
+    const res = toggleCommentLike(commentId, user.id);
+    if (!res.ok) {
+      toast.error('좋아요 처리에 실패했습니다.');
+      return;
+    }
+    refreshComments();
+  };
+
+  const authorUserId = creator?.userId || null;
+
+  const { topLevelComments, repliesByParent } = useMemo(() => {
+    const top = [];
+    const replies = new Map();
+    for (const c of comments) {
+      if (!c) continue;
+      if (!c.parentId) {
+        top.push(c);
+      } else {
+        const arr = replies.get(c.parentId) || [];
+        arr.push(c);
+        replies.set(c.parentId, arr);
+      }
+    }
+    return { topLevelComments: top, repliesByParent: replies };
+  }, [comments]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -244,6 +397,202 @@ export function ContentDetailPage({ contentId, onNavigate }) {
             )}
           </CardContent>
         </Card>
+
+        {/* Comments */}
+        <div className="mt-8">
+          <div className="flex items-end justify-between mb-3">
+            <h2 className="text-xl font-semibold">댓글</h2>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant={sortOrder === 'newest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortOrder('newest')}
+              >
+                최신순
+              </Button>
+              <Button
+                type="button"
+                variant={sortOrder === 'oldest' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setSortOrder('oldest')}
+              >
+                오래된순
+              </Button>
+              <span className="text-sm text-muted-foreground">{comments.length}개</span>
+            </div>
+          </div>
+
+          <Card>
+            <CardContent className="p-6 space-y-6">
+              {!canViewFullContent ? (
+                <div className="rounded-lg border bg-white p-4 text-sm text-muted-foreground">
+                  전체 콘텐츠를 열람한 뒤 댓글을 확인/작성할 수 있어요.
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-4">
+                    {comments.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">첫 댓글을 남겨보세요.</p>
+                    ) : (
+                      topLevelComments.map((c) => {
+                        const replies = repliesByParent.get(c.id) || [];
+                        const liked = !!user && (c.likedByUserIds || []).includes(user.id);
+                        const likeCount = (c.likedByUserIds || []).length;
+                        const isAuthor = !!authorUserId && c.userId === authorUserId;
+                        const isCreator = !!getCreatorByUserId(c.userId);
+                        return (
+                          <div key={c.id} className="rounded-lg border bg-white p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="min-w-0">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="font-medium truncate">{c.authorName || '익명'}</span>
+                                  {isAuthor ? <Badge variant="default">작성자</Badge> : null}
+                                  {isCreator ? <Badge variant="secondary">크리에이터</Badge> : null}
+                                  <span className="text-xs text-muted-foreground">
+                                    {c.createdAt ? new Date(c.createdAt).toLocaleString('ko-KR') : ''}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  type="button"
+                                  variant={liked ? 'default' : 'outline'}
+                                  size="sm"
+                                  onClick={() => handleToggleLike(c.id)}
+                                >
+                                  좋아요 {likeCount}
+                                </Button>
+                                {user && (user.role === 'ADMIN' || user.id === c.userId) ? (
+                                  <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteComment(c)}>
+                                    삭제
+                                  </Button>
+                                ) : null}
+                              </div>
+                            </div>
+
+                            <p className="mt-2 whitespace-pre-wrap text-sm">{c.body}</p>
+
+                            <div className="mt-3 flex items-center justify-between">
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  if (!user) {
+                                    toast.error('로그인이 필요합니다.');
+                                    onNavigate(ROUTES.LOGIN);
+                                    return;
+                                  }
+                                  setReplyToId((prev) => (prev === c.id ? null : c.id));
+                                  setReplyBody('');
+                                }}
+                              >
+                                답글
+                              </Button>
+                              {replies.length > 0 ? (
+                                <span className="text-xs text-muted-foreground">답글 {replies.length}개</span>
+                              ) : null}
+                            </div>
+
+                            {replyToId === c.id ? (
+                              <div className="mt-3 space-y-2">
+                                <Textarea
+                                  value={replyBody}
+                                  onChange={(e) => setReplyBody(e.target.value)}
+                                  placeholder="답글을 입력하세요"
+                                  rows={2}
+                                  disabled={isSubmittingReply}
+                                />
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => {
+                                      setReplyToId(null);
+                                      setReplyBody('');
+                                    }}
+                                  >
+                                    취소
+                                  </Button>
+                                  <Button
+                                    type="button"
+                                    onClick={() => handleAddReply(c.id)}
+                                    disabled={isSubmittingReply}
+                                  >
+                                    {isSubmittingReply ? '등록 중...' : '답글 등록'}
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : null}
+
+                            {replies.length > 0 ? (
+                              <div className="mt-4 space-y-3 border-l pl-4">
+                                {replies.map((r) => {
+                                  const rLiked = !!user && (r.likedByUserIds || []).includes(user.id);
+                                  const rLikeCount = (r.likedByUserIds || []).length;
+                                  const rIsAuthor = !!authorUserId && r.userId === authorUserId;
+                                  const rIsCreator = !!getCreatorByUserId(r.userId);
+                                  return (
+                                    <div key={r.id} className="rounded-lg border bg-white p-3">
+                                      <div className="flex items-start justify-between gap-4">
+                                        <div className="min-w-0">
+                                          <div className="flex flex-wrap items-center gap-2">
+                                            <span className="font-medium truncate text-sm">{r.authorName || '익명'}</span>
+                                            {rIsAuthor ? <Badge variant="default">작성자</Badge> : null}
+                                            {rIsCreator ? <Badge variant="secondary">크리에이터</Badge> : null}
+                                            <span className="text-xs text-muted-foreground">
+                                              {r.createdAt ? new Date(r.createdAt).toLocaleString('ko-KR') : ''}
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <div className="flex items-center gap-1">
+                                          <Button
+                                            type="button"
+                                            variant={rLiked ? 'default' : 'outline'}
+                                            size="sm"
+                                            onClick={() => handleToggleLike(r.id)}
+                                          >
+                                            좋아요 {rLikeCount}
+                                          </Button>
+                                          {user && (user.role === 'ADMIN' || user.id === r.userId) ? (
+                                            <Button type="button" variant="ghost" size="sm" onClick={() => handleDeleteComment(r)}>
+                                              삭제
+                                            </Button>
+                                          ) : null}
+                                        </div>
+                                      </div>
+                                      <p className="mt-2 whitespace-pre-wrap text-sm">{r.body}</p>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            ) : null}
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Textarea
+                      value={commentBody}
+                      onChange={(e) => setCommentBody(e.target.value)}
+                      placeholder={user ? '댓글을 입력하세요' : '로그인 후 댓글을 작성할 수 있어요'}
+                      rows={3}
+                      disabled={!user || isSubmittingComment}
+                    />
+                    <div className="flex justify-end">
+                      <Button type="button" onClick={handleAddComment} disabled={isSubmittingComment}>
+                        {isSubmittingComment ? '등록 중...' : '댓글 등록'}
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Subscribe Dialog */}
