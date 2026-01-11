@@ -19,4 +19,4 @@ RUN ./gradlew compileJava --no-daemon || true
 EXPOSE 8080
 
 # 5. DevTools로 실행
-CMD ["./gradlew", "bootRun"]
+CMD ["./gradlew", "bootRun", "--no-daemon"]

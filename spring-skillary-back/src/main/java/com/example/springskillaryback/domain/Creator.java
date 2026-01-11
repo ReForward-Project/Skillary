@@ -15,7 +15,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
-import org.springframework.data.annotation.LastModifiedBy;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -65,5 +64,5 @@ public class Creator {
     @Builder.Default
 	@OneToMany
 	@JoinColumn(name = "creator_id", nullable = false)
-	List<Post> posts = new ArrayList<>();
+	List<Content> contents = new ArrayList<>();
 }

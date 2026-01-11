@@ -7,6 +7,7 @@ services:
       dockerfile: Dockerfile.dev
     volumes:
       - ./src:/app/src
+      - ./build:/app/build
       - .gradle:/home/gradle/.gradle
     image: spring-skillary:1.0
     ports:

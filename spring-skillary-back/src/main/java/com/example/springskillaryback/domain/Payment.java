@@ -31,10 +31,10 @@ public class Payment {
 	private Byte paymentId;
 
 	@Column(nullable = false, unique = true)
-	private String orderId; // PG 사 orderId(String 의 난수 형식)
+	private String paymentKey;
 
 	@Column(nullable = false)
-	private int amount;
+	private int credit;
 
     @Builder.Default
 	@Enumerated(STRING)

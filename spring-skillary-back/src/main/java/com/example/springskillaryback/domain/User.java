@@ -18,6 +18,9 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.LastModifiedBy;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Table(name = "users")
@@ -46,15 +49,27 @@ public class User {
 	@LastModifiedBy
 	private LocalDateTime updatedAt;
 
+	@Builder.Default
 	@ManyToMany
 	@JoinTable(
 			name = "user_role",
 			joinColumns = @JoinColumn(name = "user_id"),
 			inverseJoinColumns = @JoinColumn(name = "role_id")
 	)
-	private Set<Role> roles;
+	private Set<Role> roles = new HashSet<>();
 
+	@Builder.Default
 	@OneToMany
 	@JoinColumn(name = "user_id")
-	private Set<Subscribe> subscribes;
+	private Set<Subscribe> subscribes = new HashSet<>();
+
+	@Builder.Default
+	@OneToMany
+	@JoinColumn(name = "user_id")
+	private List<Comment> comments = new ArrayList<>();
+
+	@Builder.Default
+	@OneToMany
+	@JoinColumn(name = "user_id")
+	private List<Order> orders = new ArrayList<>();
 }

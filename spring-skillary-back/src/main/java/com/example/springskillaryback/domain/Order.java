@@ -6,11 +6,10 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 
@@ -18,37 +17,39 @@ import java.time.LocalDateTime;
 
 import static jakarta.persistence.EnumType.STRING;
 
-@Table(name = "creator_settlements")
 @Entity
-@Builder
-@Getter
-@AllArgsConstructor
+@Table(name = "orders")
 @NoArgsConstructor
-public class CreatorSettlement {
+public class Order {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Byte creatorSettlementId;
+	private Byte orderId;
 
 	@Column(nullable = false)
-	private int grossAmount;
+	private int amount;
 
-	@Column(nullable = false)
-	private int platformFee;
-
-	@Column(nullable = false)
-	private int payoutAmount;
-
-    @Builder.Default
 	@Enumerated(STRING)
-    @Column(length = 20, nullable = false)
-	private SettlementStatusEnum settlementStatus = SettlementStatusEnum.CALCULATING;
+	@Column(nullable = false)
+	private OrderStatusEnum status;
 
 	@CreationTimestamp
 	private LocalDateTime createdAt;
 
-	@ManyToOne
-	private Creator creator;
+	@Column(nullable = false)
+	private LocalDateTime expiredAt;
 
 	@ManyToOne
-	private SettlementRun settlementRun;
+	private User user;
+
+	@OneToOne
+	@JoinColumn(name = "plan_id")
+	private SubscriptionPlan subscriptionPlan;
+
+	@ManyToOne
+	@JoinColumn(name = "content_id")
+	private Content content;
+
+	@OneToOne
+	@JoinColumn(name = "payment_id")
+	private Payment payment;
 }
