@@ -29,7 +29,7 @@ export function SignupPage({ onNavigate }) {
     try {
       // TODO: 실제 SMTP 이메일 전송 API 호출
       // await sendVerificationEmail(email);
-        const response = await fetch('/api/auth/email/send', {
+        const response = await fetch('/api/auth/send-confirm', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -58,7 +58,7 @@ export function SignupPage({ onNavigate }) {
     try {
       // TODO: 실제 인증 코드 검증 API 호출
       // await verifyEmailCode(email, verificationCode);
-        const response = await fetch('/api/auth/email/verify', {
+        const response = await fetch('/api/auth/email/send-code', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
