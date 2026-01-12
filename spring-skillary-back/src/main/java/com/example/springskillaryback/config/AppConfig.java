@@ -6,14 +6,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @EnableJpaAuditing
 @Configuration
-@EnableConfigurationProperties(EmailVerificationProperties.class)
+@EnableConfigurationProperties({EmailVerificationProperties.class, JwtProperties.class})
 public class AppConfig {
-	@Bean
-	public PasswordEncoder passwordEncoder() {
-		return new BCryptPasswordEncoder();
-	}
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
 }

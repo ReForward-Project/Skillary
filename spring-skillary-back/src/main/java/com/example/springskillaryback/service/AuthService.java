@@ -3,8 +3,7 @@ package com.example.springskillaryback.service;
 import com.example.springskillaryback.common.dto.TokensDto;
 
 public interface AuthService {
-	void register(String email, String password);
-
+    TokensDto register(String email, String password, String nickname);
 	TokensDto login(String email, String password);
 
 	void sendCode(String email);
@@ -15,5 +14,5 @@ public interface AuthService {
 
 	boolean withdrawal(String refreshToken);
 
-	String refresh(String refreshToken);
+	String refresh(String accessToken);
 }
