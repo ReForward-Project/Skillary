@@ -1,4 +1,3 @@
-node_modules/# 의존성 및 빌드 결과물
 node_modules/
 npm-debug.log
 .next/

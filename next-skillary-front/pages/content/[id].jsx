@@ -8,5 +8,3 @@ export default function ContentDetail({ id }) {
 export async function getServerSideProps({ params }) {
   return { props: { id: params.id } }
 }
-
-

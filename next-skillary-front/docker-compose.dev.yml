@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    image: qna-next:1.0
+    image: next-skillary:1.0
     volumes:
       - ./:/app
       - /app/node_modules
