@@ -9,7 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 @EnableJpaAuditing
 @Configuration
-@EnableConfigurationProperties({EmailVerificationProperties.class, JwtProperties.class})
+@EnableConfigurationProperties({EmailVerificationProperties.class})
 public class AppConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
