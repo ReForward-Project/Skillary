@@ -8,10 +8,10 @@ import java.util.Optional;
 import java.time.Instant;
 
 public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Byte> {
-  
-  Optional<RefreshToken> findByUserId(Byte userId);
+    Optional<RefreshToken> findByUserId(Byte userId);
 
     void deleteByUserId(Byte userId);
+
     boolean existsByUserIdAndExpiresAtAfter(Byte userId, Instant now);
 
     void deleteAllByUserId(Byte userId);

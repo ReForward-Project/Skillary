@@ -21,21 +21,9 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
 		// 요청 권한 설정
 		return http
-//                .securityMatcher("/api/**")
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
-// 				)
-// 				.cors(cors -> cors.configurationSource(request -> {
-// 					CorsConfiguration config = new CorsConfiguration();
-// 					config.setAllowedOrigins(List.of("http://localhost:3000"));
-// 					config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-// 					config.setAllowedHeaders(List.of("*"));
-// 					config.setAllowCredentials(true);
-// 					config.setExposedHeaders(List.of("Set-Cookie", "Authorization"));
-// 					return config;
-// 				}))
-// 				.csrf(AbstractHttpConfigurer::disable)
                 )
                 .cors(cors -> cors.configurationSource(configurationSource()))
                 .csrf(AbstractHttpConfigurer::disable)
@@ -52,20 +40,17 @@ public class SecurityConfig {
         configuration.setAllowCredentials(true);
         // 허용 도메인
         configuration.setAllowedOriginPatterns(List.of(
-//                "http://localhost:3000",
-//                "http://localhost:8080",
-//                "http://127.0.0.1:3000"
+                "http://localhost:3000",
+                "http://localhost:8080"
         ));
 
         // 허용 HTTP 메서드
         configuration.setAllowedMethods(List.of(
-                "GET", "POST", "PUT", "DELETE"
+                "GET", "POST", "PUT", "DELETE", "OPTIONS"
         ));
 
         // 허용 헤더
-        configuration.setAllowedHeaders(List.of(
-                "Authorization", "Content-Type"
-        ));
+        configuration.setAllowedHeaders(List.of("*"));
 
         // 노출 헤더
         configuration.setExposedHeaders(List.of(
