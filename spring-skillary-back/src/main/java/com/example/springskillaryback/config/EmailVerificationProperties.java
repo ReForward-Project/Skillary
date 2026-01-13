@@ -9,11 +9,11 @@ import org.springframework.validation.annotation.Validated;
 
 @Getter
 @Setter
-@Validated
-@ConfigurationProperties(prefix = "app.mail")
+@Validated 
+@ConfigurationProperties(prefix = "app.mail") 
 public class EmailVerificationProperties {
     @NotBlank
-    private String from;
+    private String from; 
 
     @NotBlank
     private String subject;

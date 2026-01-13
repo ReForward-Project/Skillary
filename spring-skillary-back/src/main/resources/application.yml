@@ -17,8 +17,8 @@ app:
   mail:
     from: ${APP_MAIL_FROM:no-reply@example.com}
     subject: ${APP_MAIL_SUBJECT:Skillary 이메일 인증 코드}
-    code-expiry-minutes: ${APP_MAIL_CODE_EXPIRY_MINUTES:10}
+    code-expiry-minutes: ${APP_MAIL_CODE_EXPIRY_MINUTES:1000}
   jwt:
     secret: ${APP_JWT_SECRET:change-this-secret-to-a-long-random-value}
-    access-expiry-minutes: ${APP_JWT_ACCESS_EXPIRY_MINUTES:30}
-    refresh-expiry-days: ${APP_JWT_REFRESH_EXPIRY_DAYS:30}
+    access-expiry-minutes: ${APP_JWT_ACCESS_EXPIRY_MINUTES:3000}
+    refresh-expiry-days: ${APP_JWT_REFRESH_EXPIRY_DAYS:3000}
