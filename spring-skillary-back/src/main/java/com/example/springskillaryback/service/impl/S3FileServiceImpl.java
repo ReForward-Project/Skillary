@@ -10,8 +10,6 @@ import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
@@ -43,9 +41,9 @@ public class S3FileServiceImpl implements FileService {
 
 	/** 파일 업로드 */
 	@Override
-	public String uploadFile(MultipartFile file, String subDir, Byte contentId) throws IOException {
+	public String uploadFile(MultipartFile file, String subDir) throws IOException {
 		try {
-			String fileName = generateFileName(file.getOriginalFilename(), contentId);
+			String fileName = generateFileName(file.getOriginalFilename());
 			String profile = getActiveProfile();
 			String objectKey = profile + "/" + subDir + "/" + fileName;
 
@@ -93,12 +91,10 @@ public class S3FileServiceImpl implements FileService {
 		return url != null && !url.isEmpty() && (url.contains(".amazonaws.com") || url.contains("s3."));
 	}
 
-	/** 파일명 컨텐츠id + uuid로 생성 */
-	private String generateFileName(String originalFileName, Byte contentId) {
+	/** 파일명 UUID로 생성 */
+	private String generateFileName(String originalFileName) {
 		String extension = extractExtension(originalFileName);
-		return (contentId != null) 
-			? "content-" + contentId + "-" + UUID.randomUUID() + extension
-			: UUID.randomUUID() + extension;
+		return UUID.randomUUID() + extension;
 	}
 
 	/** 파일 확장자 추출 */
