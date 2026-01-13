@@ -1,6 +1,7 @@
 package com.example.springskillaryback.controller;
 
 import com.example.springskillaryback.common.dto.CategoryResponseDto;
+import com.example.springskillaryback.common.dto.ContentListResponseDto;
 import com.example.springskillaryback.common.dto.ContentRequestDto;
 import com.example.springskillaryback.common.dto.ContentResponseDto;
 import com.example.springskillaryback.domain.CategoryEnum;
@@ -52,15 +53,49 @@ public class ContentController {
 		return ResponseEntity.ok(categories); // 200
 	}
 
+	/** 콘텐츠 전체 목록 조회 */
 	@GetMapping
-	public ResponseEntity<Slice<ContentResponseDto>> getContents(
+	public ResponseEntity<Slice<ContentListResponseDto>> getContents(
 		@RequestParam(defaultValue = "0") int page,
 		@RequestParam(defaultValue = "10") int size
 	) {
-		Slice<ContentResponseDto> contents = contentService.getContents(page, size);
+		Slice<ContentListResponseDto> contents = contentService.getContents(page, size);
 		return ResponseEntity.ok(contents); // 200
 	}
 
+	/** 인기 콘텐츠 목록 조회 (조회수 기준) */
+	@GetMapping("/popular")
+	public ResponseEntity<Slice<ContentListResponseDto>> getPopularContents(
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		Slice<ContentListResponseDto> contents = contentService.getPopularContents(page, size);
+		return ResponseEntity.ok(contents); // 200
+	}
+
+	/** 크리에이터 기준 목록 조회 */
+	@GetMapping("/creators/{creatorId}")
+	public ResponseEntity<Slice<ContentListResponseDto>> getContentsByCreator(
+		@PathVariable Byte creatorId,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		Slice<ContentListResponseDto> contents = contentService.getContentsByCreator(creatorId, page, size);
+		return ResponseEntity.ok(contents); // 200
+	}
+
+	/** 카테고리 기준 목록 조회 */
+	@GetMapping("/category/{category}")
+	public ResponseEntity<Slice<ContentListResponseDto>> getContentsByCategory(
+		@PathVariable CategoryEnum category,
+		@RequestParam(defaultValue = "0") int page,
+		@RequestParam(defaultValue = "10") int size
+	) {
+		Slice<ContentListResponseDto> contents = contentService.getContentsByCategory(category, page, size);
+		return ResponseEntity.ok(contents); // 200
+	}
+
+	/** 콘텐츠 상세 조회 (포스트, 댓글 포함) */
 	@GetMapping("/{contentId}")
 	public ResponseEntity<ContentResponseDto> getContent(@PathVariable Byte contentId) {
 		ContentResponseDto content = contentService.getContent(contentId);

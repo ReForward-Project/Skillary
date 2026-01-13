@@ -48,6 +48,10 @@ public class Content {
 	@LastModifiedDate
 	private LocalDateTime updatedAt;
 
+	@Column(name = "view_counts", nullable = false)
+	@Builder.Default
+	private Integer viewCount = 0;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "plan_id")
 	private SubscriptionPlan plan;
@@ -59,5 +63,5 @@ public class Content {
 	@JoinColumn(name = "creator_id", nullable = false)
 	private Creator creator;
 
-	private String thumbnailUrl; // 썸네일 이미지 URL
+	private String thumbnailUrl;
 }

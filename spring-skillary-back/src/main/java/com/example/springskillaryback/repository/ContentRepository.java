@@ -8,21 +8,34 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import com.example.springskillaryback.domain.CategoryEnum;
 import com.example.springskillaryback.domain.Content;
 
 public interface ContentRepository extends JpaRepository<Content, Byte> {
 	Optional<Content> findByTitle(String title);
 
-	// n+1 이슈 : 연관 지연로딩 엔티티그래프로 fetch join 최적화
-	@EntityGraph(attributePaths = {"creator", "post", "post.fileList", "post.comments", "post.comments.user"})
-	@Query("SELECT c FROM Content c")
-	Slice<Content> findAllWithRelations(Pageable pageable);
+	/** 콘텐츠 전체 목록 */
+	@EntityGraph(attributePaths = {"creator", "plan"})
+	@Query("SELECT c FROM Content c ORDER BY c.createdAt DESC")
+	Slice<Content> findAllForList(Pageable pageable);
 
-	@EntityGraph(attributePaths = {"creator", "post", "post.fileList", "post.comments", "post.comments.user"})
-	Optional<Content> findById(Byte contentId);
+	/** 크리에이터 기준 목록 */
+	@EntityGraph(attributePaths = {"creator", "plan"})
+	@Query("SELECT c FROM Content c WHERE c.creator.creatorId = :creatorId ORDER BY c.createdAt DESC")
+	Slice<Content> findByCreatorIdForList(Byte creatorId, Pageable pageable);
 
-	// content post 조인
-	@EntityGraph(attributePaths = {"post"})
+	/** 카테고리 기준 목록 */
+	@EntityGraph(attributePaths = {"creator", "plan"})
+	@Query("SELECT c FROM Content c WHERE c.category = :category ORDER BY c.createdAt DESC")
+	Slice<Content> findByCategoryForList(CategoryEnum category, Pageable pageable);
+
+	/** 조회수 기준 목록 */
+	@EntityGraph(attributePaths = {"creator", "plan"})
+	@Query("SELECT c FROM Content c ORDER BY c.viewCount DESC, c.createdAt DESC")
+	Slice<Content> findPopularForList(Pageable pageable);
+
+    /** 상세 */
+	@EntityGraph(attributePaths = {"creator", "plan", "post", "post.fileList"})
 	@Query("SELECT c FROM Content c WHERE c.contentId = :contentId")
-	Optional<Content> findByIdWithPost(Byte contentId);
+	Optional<Content> findByIdForDetail(Byte contentId);
 }

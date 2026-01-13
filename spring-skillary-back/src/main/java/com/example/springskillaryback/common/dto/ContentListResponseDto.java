@@ -5,32 +5,33 @@ import com.example.springskillaryback.domain.Content;
 
 import java.time.LocalDateTime;
 
-public record ContentResponseDto(
+
+public record ContentListResponseDto(
 		Byte contentId,
 		String title,
-        String description,
+		String description,
 		CategoryEnum category,
 		Byte creatorId,
+		String creatorName,
 		Byte planId,
 		String thumbnailUrl,
 		LocalDateTime createdAt,
 		LocalDateTime updatedAt,
-		Integer viewCount,
-		PostResponseDto post
+		Integer viewCount
 ) {
-	public static ContentResponseDto from(Content content) {
-		return new ContentResponseDto(
+	public static ContentListResponseDto from(Content content) {
+		return new ContentListResponseDto(
 			content.getContentId(),
 			content.getTitle(),
-            content.getDescription(),
+			content.getDescription(),
 			content.getCategory(),
 			content.getCreator().getCreatorId(),
+			content.getCreator().getDisplayName(),
 			content.getPlan() != null ? content.getPlan().getPlanId() : null,
 			content.getThumbnailUrl(),
 			content.getCreatedAt(),
 			content.getUpdatedAt(),
-			content.getViewCount() != null ? content.getViewCount() : 0,
-			content.getPost() != null ? PostResponseDto.from(content.getPost()) : null
+			content.getViewCount() != null ? content.getViewCount() : 0
 		);
 	}
 }

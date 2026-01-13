@@ -1,7 +1,9 @@
 package com.example.springskillaryback.service.impl;
 
+import com.example.springskillaryback.common.dto.ContentListResponseDto;
 import com.example.springskillaryback.common.dto.ContentRequestDto;
 import com.example.springskillaryback.common.dto.ContentResponseDto;
+import com.example.springskillaryback.domain.CategoryEnum;
 import com.example.springskillaryback.domain.Content;
 import com.example.springskillaryback.domain.Creator;
 import com.example.springskillaryback.domain.Post;
@@ -75,7 +77,7 @@ public class ContentServiceImpl implements ContentService {
 	/** 콘텐츠 수정 */
 	@Override
 	public ContentResponseDto updateContent(Byte contentId, ContentRequestDto requestDto, Byte creatorId) {
-		Content content = contentRepository.findById(contentId)
+		Content content = contentRepository.findByIdForDetail(contentId)
 			.orElseThrow(() -> new IllegalArgumentException("콘텐츠 없음"));
 
 		if (!content.getCreator().getCreatorId().equals(creatorId)) {
@@ -99,8 +101,7 @@ public class ContentServiceImpl implements ContentService {
 			if (content.getPost() != null) {
 				Post post = content.getPost();
 				post.setBody(requestDto.post().body());
-				post.getFileList().clear();
-				createPostFiles(post, requestDto.post().postFiles());
+				updatePostFiles(post, requestDto.post().postFiles());
 			} else {
 				Post post = Post.builder()
 					.body(requestDto.post().body())
@@ -116,21 +117,53 @@ public class ContentServiceImpl implements ContentService {
 		return ContentResponseDto.from(savedContent);
 	}
 
-	/** 콘텐츠 목록 조회 */
+	/** 콘텐츠 전체 목록 조회 */
 	@Override
 	@Transactional(readOnly = true)
-	public Slice<ContentResponseDto> getContents(int page, int size) {
+	public Slice<ContentListResponseDto> getContents(int page, int size) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-		Slice<Content> contents = contentRepository.findAllWithRelations(pageable);
-		return contents.map(ContentResponseDto::from);
+		Slice<Content> contents = contentRepository.findAllForList(pageable);
+		return contents.map(ContentListResponseDto::from);
 	}
 
-	/** 콘텐츠 단건 조회 */
+	/** 인기 콘텐츠 목록 조회 (조회순 기준) */
 	@Override
 	@Transactional(readOnly = true)
+	public Slice<ContentListResponseDto> getPopularContents(int page, int size) {
+		Pageable pageable = PageRequest.of(page, size);
+		Slice<Content> contents = contentRepository.findPopularForList(pageable);
+		return contents.map(ContentListResponseDto::from);
+	}
+
+	/** 크리에이터 기준 목록 조회 */
+	@Override
+	@Transactional(readOnly = true)
+	public Slice<ContentListResponseDto> getContentsByCreator(Byte creatorId, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		Slice<Content> contents = contentRepository.findByCreatorIdForList(creatorId, pageable);
+		return contents.map(ContentListResponseDto::from);
+	}
+
+	/** 카테고리 기준 목록 조회 */
+	@Override
+	@Transactional(readOnly = true)
+	public Slice<ContentListResponseDto> getContentsByCategory(CategoryEnum category, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		Slice<Content> contents = contentRepository.findByCategoryForList(category, pageable);
+		return contents.map(ContentListResponseDto::from);
+	}
+
+	/** 콘텐츠 상세 조회 (포스트, 댓글 포함) */
+	@Override
+	@Transactional  // 콘텐츠 상세 조회할때 카운트로 쓰기 변경
 	public ContentResponseDto getContent(Byte contentId) {
-		Content content = contentRepository.findById(contentId)
+		Content content = contentRepository.findByIdForDetail(contentId)
 			.orElseThrow(() -> new IllegalArgumentException("콘텐츠 없음"));
+		
+		// 조회수 증가
+		content.setViewCount(content.getViewCount() + 1);
+		contentRepository.save(content);
+		
 		return ContentResponseDto.from(content);
 	}
 
@@ -163,6 +196,47 @@ public class ContentServiceImpl implements ContentService {
 			}
 			post.setFileList(fileList);
 		}
+	}
+
+	/** 포스트 내 파일 수정 처리 */
+	private void updatePostFiles(Post post, List<String> newPostFiles) {
+		if (newPostFiles == null) {
+			newPostFiles = new ArrayList<>();
+		}
+
+		List<PostFile> prevFiles = post.getFileList();
+		if (prevFiles == null) {
+			prevFiles = new ArrayList<>();
+		}
+
+		// 기존 파일 중 새로운 리스트에 없는 파일
+		List<PostFile> filesToRemove = new ArrayList<>();
+		for (PostFile file : prevFiles) {
+			if (!newPostFiles.contains(file.getUrl())) {
+				// S3 파일 삭제
+				if (fileService.isS3Url(file.getUrl())) {
+					fileService.deleteFile(file.getUrl());
+				}
+				filesToRemove.add(file);
+			}
+		}
+		prevFiles.removeAll(filesToRemove);
+
+		// 새로운 파일 중 기존에 없는 파일만 추가
+		List<String> addUrls = prevFiles.stream()
+			.map(PostFile::getUrl)
+			.toList();
+
+		for (String url : newPostFiles) {
+			if (!addUrls.contains(url)) {
+				prevFiles.add(PostFile.builder()
+					.post(post)
+					.url(url)
+					.build());
+			}
+		}
+
+		post.setFileList(prevFiles);
 	}
 
 	/** 콘텐츠와 연관된 파일들 삭제 */
