@@ -49,6 +49,7 @@ public class ContentServiceImpl implements ContentService {
 		Content content = Content.builder()
 			.title(requestDto.title())
 			.category(requestDto.category())
+            .description(requestDto.description())
 			.creator(creator)
 			.plan(plan)
 			.thumbnailUrl(requestDto.thumbnailUrl())
@@ -87,11 +88,13 @@ public class ContentServiceImpl implements ContentService {
 				.orElseThrow(() -> new IllegalArgumentException("플랜 없음"));
 		}
 
-		content.setTitle(requestDto.title());
-		content.setCategory(requestDto.category());
+        if(requestDto.title() != null) content.setTitle(requestDto.title());
+        if(requestDto.description() != null) content.setDescription(requestDto.description());
+        if(requestDto.category() != null) content.setCategory(requestDto.category());
+        if(requestDto.thumbnailUrl() != null) content.setThumbnailUrl(requestDto.thumbnailUrl());
 		content.setPlan(plan);
-		content.setThumbnailUrl(requestDto.thumbnailUrl());
-
+        
+        // 본문 수정시
 		if (requestDto.post() != null) {
 			if (content.getPost() != null) {
 				Post post = content.getPost();
@@ -99,7 +102,6 @@ public class ContentServiceImpl implements ContentService {
 				post.getFileList().clear();
 				createPostFiles(post, requestDto.post().postFiles());
 			} else {
-				// Post가 없으면 새로 생성
 				Post post = Post.builder()
 					.body(requestDto.post().body())
 					.creator(content.getCreator())

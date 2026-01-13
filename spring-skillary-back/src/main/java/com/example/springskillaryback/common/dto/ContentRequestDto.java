@@ -4,8 +4,8 @@ import com.example.springskillaryback.domain.CategoryEnum;
 
 public record ContentRequestDto(
 		String title,
+        String description,
 		CategoryEnum category,
-		Integer price,
 		Byte planId,
 		String thumbnailUrl,
 		PostRequestDto post

@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 public record ContentResponseDto(
 		Byte contentId,
 		String title,
+        String description,
 		CategoryEnum category,
 		Byte creatorId,
 		Byte planId,
@@ -20,6 +21,7 @@ public record ContentResponseDto(
 		return new ContentResponseDto(
 			content.getContentId(),
 			content.getTitle(),
+            content.getDescription(),
 			content.getCategory(),
 			content.getCreator().getCreatorId(),
 			content.getPlan() != null ? content.getPlan().getPlanId() : null,

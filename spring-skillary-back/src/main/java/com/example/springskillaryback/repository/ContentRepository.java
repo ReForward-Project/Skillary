@@ -23,5 +23,6 @@ public interface ContentRepository extends JpaRepository<Content, Byte> {
 
 	// content post 조인
 	@EntityGraph(attributePaths = {"post"})
+	@Query("SELECT c FROM Content c WHERE c.contentId = :contentId")
 	Optional<Content> findByIdWithPost(Byte contentId);
 }
