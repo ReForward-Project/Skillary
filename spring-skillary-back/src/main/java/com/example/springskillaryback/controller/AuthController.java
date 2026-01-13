@@ -42,6 +42,8 @@ public class AuthController {
             authService.sendCode(request.email());
             return ResponseEntity.status(201).build(); // 201 상태 코드 반환
         } catch (Exception exception) {
+            exception.printStackTrace(); // 에러 로깅
+            System.err.println("❌ 인증코드 발송 실패: " + exception.getMessage());
             return ResponseEntity.internalServerError().build(); // 500 상태 코드 반환
         }
     }
@@ -51,36 +53,39 @@ public class AuthController {
         try {
             boolean verified = authService.verifyCode(request.email(), request.code());
             if (!verified) {
+                System.err.println("❌ 인증코드 불일치: email=" + request.email() + ", code=" + request.code());
                 return ResponseEntity.badRequest().build();// 400 상태 코드 반환
             }
+            System.out.println("✅ 인증코드 확인 성공: email=" + request.email());
             return ResponseEntity.status(201).build(); // 201 상태 코드 반환
+        } catch (Exception exception) {
+            exception.printStackTrace(); // 에러 로깅
+            System.err.println("❌ 인증코드 확인 실패: " + exception.getMessage());
+            return ResponseEntity.internalServerError().build(); // 500 상태 코드 반환
+        }
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<Void> refresh(@CookieValue(name = ACCESS_TOKEN_COOKIE, required = false) String accessToken) {
+        if (accessToken == null || accessToken.isBlank()) {
+            return ResponseEntity.badRequest().build(); // 400 상태 코드 반환
+        }
+        try {
+            String newAccessToken = authService.refresh(accessToken);
+            return ResponseEntity.status(201)
+                    .header("Set-Cookie", buildAccessCookie(newAccessToken).toString())
+                    .build();
         } catch (Exception exception) {
             return ResponseEntity.internalServerError().build(); // 500 상태 코드 반환
         }
-
-}
-
-@PostMapping("/refresh")
-public ResponseEntity<Void> refresh(@CookieValue(name = ACCESS_TOKEN_COOKIE, required = false) String accessToken) {
-    if (accessToken == null || accessToken.isBlank()) {
-        return ResponseEntity.badRequest().build(); // 400 상태 코드 반환
     }
-    try {
-        String newAccessToken = authService.refresh(accessToken);
-        return ResponseEntity.status(201)
-                .header("Set-Cookie", buildAccessCookie(newAccessToken).toString())
+
+    private ResponseCookie buildAccessCookie(String token) {
+        return ResponseCookie.from(ACCESS_TOKEN_COOKIE, token) // 액세스 토큰 쿠키 설정
+                .httpOnly(true)
+                .path("/")
+                .maxAge(jwtProperties.getAccessExpiryMinutes() * 60L) // 액세스 토큰 만료 시간 설정
+                .sameSite("Lax") 
                 .build();
-    } catch (Exception exception) {
-        return ResponseEntity.internalServerError().build(); // 500 상태 코드 반환
     }
-}
-
-private ResponseCookie buildAccessCookie(String token) {
-    return ResponseCookie.from(ACCESS_TOKEN_COOKIE, token) // 액세스 토큰 쿠키 설정
-            .httpOnly(true)
-            .path("/")
-            .maxAge(jwtProperties.getAccessExpiryMinutes() * 60L) // 액세스 토큰 만료 시간 설정
-            .sameSite("Lax") 
-            .build();
-}
 }

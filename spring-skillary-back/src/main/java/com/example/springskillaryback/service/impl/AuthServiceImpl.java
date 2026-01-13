@@ -15,10 +15,12 @@ import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -32,8 +34,10 @@ public class AuthServiceImpl implements AuthService {
     private final JwtProperties jwtProperties;
 
     @Override
+    @Transactional
     public TokensDto register(String email, String password, String nickname) {
-        if (verifiedEmailRepository.findByEmail(email).isEmpty()) {
+        Optional<VerifiedEmail> verifiedEmail = verifiedEmailRepository.findByEmail(email);
+        if (verifiedEmail.isEmpty()) {
             throw new IllegalStateException("email not verified");
         }
         if (userRepository.findByEmail(email).isPresent()) {
@@ -45,7 +49,11 @@ public class AuthServiceImpl implements AuthService {
                 .nickname(nickname)
                 .build();
         User saved = userRepository.save(user);
-        verifiedEmailRepository.deleteByEmail(email);
+        
+        // verified_emails에서 삭제 (delete + flush)
+        verifiedEmailRepository.delete(verifiedEmail.get());
+        verifiedEmailRepository.flush();
+        
         refreshTokenRepository.deleteByUserId(saved.getUserId());
         String refreshToken = jwtTokenizer.createRefreshToken(saved.getUserId().toString());
         LocalDateTime expiresAt = LocalDateTime.ofInstant(
@@ -82,12 +90,8 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public boolean verifyCode(String email, String code) {
-        boolean verified = emailVerificationService.verifyCode(email, code);
-        if (verified) {
-            verifiedEmailRepository.deleteByEmail(email);
-            verifiedEmailRepository.save(new VerifiedEmail(email));
-        }
-        return verified;
+        // EmailVerificationService에서 이미 verified_emails 저장을 처리함
+        return emailVerificationService.verifyCode(email, code);
     }
 
     @Override
