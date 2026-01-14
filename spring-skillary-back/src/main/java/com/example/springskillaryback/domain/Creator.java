@@ -38,6 +38,12 @@ public class Creator {
 
 	private String profile;
 
+    private String bankName;
+
+    private String accountNumber;
+
+    private Byte follow_count;
+
     @Builder.Default
 	private boolean isDeleted = false;
 
