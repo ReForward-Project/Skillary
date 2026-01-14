@@ -163,6 +163,18 @@ export default function RegisterPage() {
         }
         setIsLoading(true);
         try {
+            const nicknameCheckResponse = await fetch(
+                `http://localhost:8080/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`,
+            );
+            if (!nicknameCheckResponse.ok) {
+                const errorMessage = nicknameCheckResponse.headers.get('X-Error-Message');
+                throw new Error(errorMessage || '닉네임 중복 확인에 실패했습니다.');
+            }
+            const nicknameCheckData = await nicknameCheckResponse.json();
+            if (!nicknameCheckData.available) {
+                setError('이미 사용 중인 닉네임입니다.');
+                return;
+            }
             const response = await fetch('http://localhost:8080/api/auth/register', {
                 method: 'POST',
                 headers: {
