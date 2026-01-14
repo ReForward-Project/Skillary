@@ -63,7 +63,6 @@ public class AuthServiceImpl implements AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("해당 이메일이 없음"));
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            log.error(passwordEncoder.encode(password), passwordEncoder.encode(user.getPassword()));
             throw new IllegalArgumentException("비밀번호가 맞지 않음");
         }
 
