@@ -17,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -39,14 +40,14 @@ public class AuthServiceImpl implements AuthService {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new IllegalStateException("email already exists");
         }
+        Role roleUser = roleRepository.findByRole(RoleEnum.ROLE_USER);
+
         User user = User.builder()
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .nickname(nickname)
+                .roles(Set.of(roleUser))
                 .build();
-
-        Role role = roleRepository.findByRole(RoleEnum.ROLE_USER);
-        user.getRoles().add(role);
 
         userRepository.save(user);
 
