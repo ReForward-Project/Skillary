@@ -26,7 +26,7 @@ public class SecurityConfig {
 		return http
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error", "/api/auth/register", "/api/auth/login"
-                                , "/api/auth/send-confirm", "/api/auth/send-code"
+                                , "/api/auth/send-confirm", "/api/auth/send-code", "/api/auth/check-nickname"
                                 , "/api/auth/refresh", "/api/auth/logout").permitAll()
                         .anyRequest().authenticated()
                 )
