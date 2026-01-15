@@ -15,6 +15,8 @@ const result = await baseRequest(
 console.log(result);
 */
 const TEXT_HEADERS = { Accept: 'text/plain' };
+const DEFAULT_API_URL = 'http://localhost:8080';
+const API_URL = process.env.NEXT_PUBLIC_FRONT_API_URL || DEFAULT_API_URL;
 
 // 백엔드: POST /api/auth/login (201, Set-Cookie, body 없음)
 export async function login(email, password) {
@@ -27,6 +29,24 @@ export async function login(email, password) {
     true // credentials include (쿠키 수신/전송)
   );
   return true;
+}
+
+// 로그인 상태 체크 용도:
+// - 201: 로그인 상태(AT 재발급 성공)
+// - 401: 비로그인/세션 만료(정상 케이스) → throw/log 없이 false 반환
+export async function silentRefresh() {
+  try {
+    const res = await fetch(`${API_URL}/api/auth/refresh`, {
+      method: 'POST',
+      headers: TEXT_HEADERS,
+      credentials: 'include',
+    });
+
+    if (res.status === 401) return false;
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 // 백엔드: POST /api/auth/refresh (201, Set-Cookie, body 없음)

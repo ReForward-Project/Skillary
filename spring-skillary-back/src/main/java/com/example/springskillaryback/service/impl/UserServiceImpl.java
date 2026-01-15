@@ -7,12 +7,16 @@ import com.example.springskillaryback.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.util.regex.Pattern;
 
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
-    
+    private final Pattern NICKNAME_PATTERN = Pattern.compile("^[가-힣a-zA-Z0-9_]+$");
+
     @Override
     @Transactional(readOnly = true)
     public MeResponse me(Byte userId) {
@@ -20,5 +24,31 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
 
         return new MeResponse(user.getUserId(), user.getEmail(), user.getNickname(), user.getRoles());
+    }
+
+    @Override
+    @Transactional
+    public void updateUser(Byte userId, String nickname) {
+        // TODO: 유저 정보 수정
+        if (!StringUtils.hasText(nickname)) throw new IllegalStateException("닉네임을 입력해주세요");
+        String trimmed = nickname.trim();
+        if (!trimmed.equals(nickname)) throw new IllegalStateException("닉네임 앞뒤에 공백을 사용할 수 없습니다");
+        if (trimmed.length() < 4) throw new IllegalStateException("닉네임은 4자 이상이어야 합니다");
+        if (trimmed.length() > 12) throw new IllegalStateException("닉네임은 12자 이하여야 합니다");
+        if (!NICKNAME_PATTERN.matcher(trimmed).matches()) {
+            throw new IllegalStateException("닉네임은 한글/영문/숫자/밑줄(_)만 사용할 수 있습니다");
+        }
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자 없음"));
+        if (!trimmed.equals(user.getNickname()) && userRepository.existsByNickname(trimmed)) {
+            throw new IllegalStateException("이미 사용 중인 닉네임입니다");
+        }
+
+        user.setNickname(trimmed);
+    }
+
+    @Override
+    public void deleteUser(Byte userId) {
+        // TODO: 회원 탈퇴
     }
 }

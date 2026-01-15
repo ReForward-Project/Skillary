@@ -28,9 +28,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error", "/api/auth/register", "/api/auth/login"
                                 , "/api/auth/send-confirm", "/api/auth/send-code"
-                                , "/api/auth/refresh", "/api/auth/logout").permitAll()
-                        // 정병천 : 콘텐츠 관련 get - 비로그인도 노출 허용 추가
-                        .requestMatchers(HttpMethod.GET, "/api/contents/**").permitAll()
+                                , "/api/auth/refresh", "/api/auth/logout", "/api/creators/profile/*",
+                                "/api/auth/check-nickname", "/api/contents/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(configurationSource()))

@@ -62,7 +62,7 @@ export async function baseRequest(
             console.warn("토큰 만료 감지, 갱신 시도...");
             try {
                 await attemptRefresh();
-                response = await fetch(fullUrl, fetchOptions);
+            response = await fetch(fullUrl, fetchOptions);
             } catch (e) {
                 // refresh 실패면 그대로 401 처리로 내려가게 둠
             }
