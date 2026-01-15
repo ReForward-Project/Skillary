@@ -5,23 +5,23 @@ import Link from 'next/link';
 import { billingAuth, pagingCard, getCustomerKey } from '@/api/payments';
 
 export default function CardListPage() {
-  const [tossPayments, setTossPayments] = useState(null);
-  const clientKey = 'test_ck_yL0qZ4G1VO11Mw99NZLv8oWb2MQY';
+  const [cards, setCards] = useState([]); // 실제 데이터 배열
+  const [loading, setLoading] = useState(true);
+
+  const fetchCards = async () => {
+    try {
+      const response = await pagingCard(0, 10);
+      // Spring Page 객체 구조에서는 response.content 안에 데이터 배열이 들어있습니다.
+      setCards(response.content || []);
+    } catch (error) {
+      console.log("결제 내역 로딩 실패:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    console.log("cards", cards);
-    // 스크립트가 로드되었는지 확인 후 객체 생성
-    if (window.TossPayments) {
-      setTossPayments(window.TossPayments(clientKey));
-    } else {
-      // 혹시라도 로드가 늦어질 경우를 대비해 스크립트 태그의 이벤트를 감시할 수도 있습니다.
-      const script = document.querySelector('script[src*="tosspayments"]');
-      if (script) {
-        script.addEventListener('load', () => {
-          setTossPayments(window.TossPayments(clientKey));
-        });
-      }
-    }
+    fetchCards();
   }, []);
 
   // 토스페이먼츠 빌링 인증 실행 함수
@@ -31,29 +31,10 @@ export default function CardListPage() {
       billingAuth(customerKey);
     } catch (error) {
       console.error("카드 등록 중 오류:", error);
+    } finally {
+      fetchCards();
     }
   };
-
-
-  const [cards, setCards] = useState([]); // 실제 데이터 배열
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // 비동기 데이터를 가져오는 로직
-    const fetchPayments = async () => {
-      try {
-        const response = await pagingCard(0, 10);
-        // Spring Page 객체 구조에서는 response.content 안에 데이터 배열이 들어있습니다.
-        setCards(response.content || []);
-      } catch (error) {
-        console.error("결제 내역 로딩 실패:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPayments();
-  }, []);
 
   if (loading) return <div className="p-10 text-center">로딩 중...</div>;
 

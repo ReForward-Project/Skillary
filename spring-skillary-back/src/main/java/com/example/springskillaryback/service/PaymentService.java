@@ -4,7 +4,6 @@ import com.example.springskillaryback.domain.Card;
 import com.example.springskillaryback.domain.Content;
 import com.example.springskillaryback.domain.Order;
 import com.example.springskillaryback.domain.Payment;
-import com.example.springskillaryback.domain.Subscribe;
 import org.springframework.data.domain.Page;
 
 public interface PaymentService {
@@ -13,6 +12,8 @@ public interface PaymentService {
 	Card createCard(String email, String customerKey, String authKey);
 
 	Page<Card> pagingCard(int page, int size);
+
+	Page<Order> pagingOrder(int page, int size);
 
 	Order saveSubscriptionOrder(String email, byte planId);
 

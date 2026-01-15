@@ -75,8 +75,15 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	@Transactional(readOnly = true)
 	public Page<Card> pagingCard(int page, int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by("cardStatus").ascending());
+		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 		return cardRepository.findAll(pageable);
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Page<Order> pagingOrder(int page, int size) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+		return orderRepository.findAll(pageable);
 	}
 
 	@Override

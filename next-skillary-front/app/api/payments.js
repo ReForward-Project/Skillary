@@ -106,10 +106,6 @@ export async function confirmBillingPay(
   planName,
   amount
 ) {
-  console.log('customerKey', customerKey);
-  console.log('orderId', orderId);
-  console.log('planName', planName);
-  console.log('amount', amount);
   const response = await baseRequest(
     'POST',
     {},
@@ -175,9 +171,6 @@ export async function completeSinglePay(
   paymentKey,
   amount
 ) {
-  console.log(orderId);
-  console.log(paymentKey);
-  console.log(amount);
   const result = await baseRequest(
     'POST',
     {},
@@ -206,5 +199,17 @@ export async function pagingPayments(
   );
 
   console.log('paging: ',result);
+  return result;
+}
+
+export async function pagingOrder(
+  page = 0, size = 10
+) {
+  const result = await baseRequest(
+    'GET',
+    {},
+    `/payments/orders?page=${page}&size=${size}`,
+    null
+  );
   return result;
 }

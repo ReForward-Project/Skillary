@@ -7,6 +7,7 @@ import com.example.springskillaryback.common.dto.CompleteBillingPaymentResponseD
 import com.example.springskillaryback.common.dto.CompleteSinglePaymentRequestDto;
 import com.example.springskillaryback.common.dto.CompleteSinglePaymentResponseDto;
 import com.example.springskillaryback.common.dto.CustomerKeyResponseDto;
+import com.example.springskillaryback.common.dto.OrderResponseDto;
 import com.example.springskillaryback.common.dto.PaymentResponseDto;
 import com.example.springskillaryback.common.dto.PlanOrderRequestDto;
 import com.example.springskillaryback.common.dto.PlanOrderResponseDto;
@@ -67,6 +68,15 @@ public class PaymentController {
 	) {
 		return ResponseEntity.ok(paymentService.pagingCard(page, size)
 		                                       .map(CardResponseDto::from));
+	}
+
+	@GetMapping("/orders")
+	public ResponseEntity<Page<OrderResponseDto>> pagingOrder(
+			@RequestParam(defaultValue = "0") Integer page,
+			@RequestParam(defaultValue = "10") Integer size
+	) {
+		return ResponseEntity.ok(paymentService.pagingOrder(page, size)
+				                         .map(OrderResponseDto::from));
 	}
 
 	@PostMapping("/orders/single")

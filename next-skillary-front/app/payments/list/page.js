@@ -5,15 +5,6 @@ import Link from 'next/link';
 import { pagingPayments } from '@/api/payments';
 
 export default function PaymentsListPage() {
-  /*
-		byte paymentId,
-		String creatorName,
-		String productName,
-		int credit,
-		String creditStatus,
-		String creditMethod,
-		LocalDateTime paidAt
-  */
 
   const [payments, setPayments] = useState([]); // 실제 데이터 배열
   const [loading, setLoading] = useState(true);
