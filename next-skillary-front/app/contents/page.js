@@ -1,9 +1,138 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import PopularCard from '../components/PopularCard';
+import { getContents, getCategories, getContentsByCategory } from '../api/contents';
 import { popularContents } from '../components/popularContentsData';
 
 export default function ContentsPage() {
-  // 임시로 더 많은 데이터를 보여주기 위해 데이터 복제
-  const allContents = [...popularContents, ...popularContents, ...popularContents];
+  const [contents, setContents] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedType, setSelectedType] = useState('all'); // 'all', 'free', 'subscription', 'paid'
+  const [page, setPage] = useState(0);
+  const [size] = useState(10);
+  const [hasNext, setHasNext] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // 카테고리 목록 로드
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const data = await getCategories();
+        setCategories(data);
+      } catch (err) {
+        console.error('카테고리 로드 실패:', err);
+      }
+    }
+    loadCategories();
+  }, []);
+
+  // 콘텐츠 목록 로드
+  useEffect(() => {
+    async function loadContents() {
+      setLoading(true);
+      setError(null);
+      try {
+        let data;
+        if (selectedCategory) {
+          data = await getContentsByCategory(selectedCategory, page, size);
+        } else {
+          data = await getContents(page, size);
+        }
+        
+        // Slice 응답 구조: { content: [...], hasNext: boolean, ... }
+        let filteredContents = data.content || [];
+        
+        // 타입 필터링
+        if (selectedType === 'free') {
+          filteredContents = filteredContents.filter(c => !c.planId && !c.price);
+        } else if (selectedType === 'subscription') {
+          filteredContents = filteredContents.filter(c => c.planId);
+        } else if (selectedType === 'paid') {
+          filteredContents = filteredContents.filter(c => c.price);
+        }
+        
+        // 실제 데이터가 있으면 실제 데이터 사용, 없으면 목업 데이터 사용
+        if (filteredContents.length > 0) {
+          setContents(filteredContents);
+          setHasNext(data.hasNext || false);
+        } else {
+          // 목업 데이터를 실제 데이터 형식으로 변환
+          const mockData = popularContents.map(content => ({
+            contentId: content.id,
+            title: content.title,
+            description: content.description,
+            creatorName: content.author,
+            createdAt: new Date().toISOString(),
+            thumbnailUrl: null,
+            category: content.category || 'ETC',
+            planId: content.badgeType === 'badge' && content.badge === '구독자 전용' ? 1 : null,
+            price: content.badgeType === 'price' ? parseInt(content.price?.replace(/[^0-9]/g, '') || '0') : null,
+            viewCount: 0
+          }));
+          setContents(mockData);
+          setHasNext(false);
+        }
+      } catch (err) {
+        console.error('콘텐츠 로드 실패:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadContents();
+  }, [page, size, selectedCategory, selectedType]);
+
+  const handleCategoryChange = (e) => {
+    setSelectedCategory(e.target.value === 'ALL' ? null : e.target.value);
+    setPage(0); // 카테고리 변경 시 첫 페이지로
+  };
+
+  const handleTypeClick = (type) => {
+    setSelectedType(type);
+    setPage(0); // 타입 변경 시 첫 페이지로
+  };
+
+  const handlePrevPage = () => {
+    if (page > 0) {
+      setPage(page - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (hasNext) {
+      setPage(page + 1);
+    }
+  };
+
+  // 날짜 포맷팅
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth() + 1;
+    const day = date.getDate();
+    return `${year}. ${month}. ${day}.`;
+  };
+
+  // 가격 포맷팅
+  const formatPrice = (price) => {
+    if (!price) return null;
+    return `₩${price.toLocaleString()}`;
+  };
+
+  // 배지 타입 결정 (planId가 있으면 구독, price가 있으면 유료, 없으면 무료)
+  const getBadgeInfo = (content) => {
+    if (content.planId) {
+      return { type: 'badge', text: '구독자 전용' };
+    } else if (content.price) {
+      return { type: 'price', text: formatPrice(content.price) };
+    } else {
+      return { type: 'badge', text: '무료' };
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -15,59 +144,145 @@ export default function ContentsPage() {
         </div>
 
         {/* 필터 섹션 */}
-        <div className="mb-6 flex flex-wrap gap-4">
-          <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold hover:bg-gray-800 transition">
-            전체
-          </button>
-          <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
-            무료
-          </button>
-          <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
-            구독자 전용
-          </button>
-          <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
-            유료
-          </button>
+        <div className="mb-6">
+          <div className="flex items-center gap-4 flex-wrap">
+            {/* 타입 탭 버튼 */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleTypeClick('all')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                  selectedType === 'all'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                전체
+              </button>
+              <button
+                onClick={() => handleTypeClick('free')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                  selectedType === 'free'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                무료
+              </button>
+              <button
+                onClick={() => handleTypeClick('subscription')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                  selectedType === 'subscription'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                구독자 전용
+              </button>
+              <button
+                onClick={() => handleTypeClick('paid')}
+                className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                  selectedType === 'paid'
+                    ? 'bg-black text-white'
+                    : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                유료
+              </button>
+            </div>
+
+            {/* 카테고리 셀렉트 */}
+            <div className="relative">
+              <select
+                value={selectedCategory || 'ALL'}
+                onChange={handleCategoryChange}
+                className="px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black appearance-none bg-white text-sm font-semibold"
+              >
+                <option value="ALL">카테고리 전체</option>
+                {categories.map((category) => (
+                  <option key={category.code} value={category.code}>
+                    {category.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* 로딩 상태 */}
+        {loading && (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-black mb-4"></div>
+            <p className="text-gray-600">콘텐츠를 불러오는 중...</p>
+          </div>
+        )}
+
+        {/* 에러 상태 */}
+        {error && (
+          <div className="text-center py-12">
+            <p className="text-red-600">오류: {error}</p>
+          </div>
+        )}
 
         {/* 콘텐츠 그리드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {allContents.map((content, index) => (
-            <PopularCard
-              key={index}
-              id={content.id}
-              title={content.title}
-              description={content.description}
-              author={content.author}
-              date={content.date}
-              badge={content.badge}
-              badgeType={content.badgeType}
-              price={content.price}
-              emoji={content.emoji}
-              gradientFrom={content.gradientFrom}
-              gradientTo={content.gradientTo}
-            />
-          ))}
-        </div>
+        {!loading && !error && contents.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch">
+            {contents.map((content) => {
+              const badgeInfo = getBadgeInfo(content);
+              return (
+                <PopularCard
+                  key={content.contentId}
+                  id={content.contentId}
+                  title={content.title}
+                  description={content.description}
+                  author={content.creatorName}
+                  date={formatDate(content.createdAt)}
+                  badge={badgeInfo.text}
+                  badgeType={badgeInfo.type}
+                  price={badgeInfo.type === 'price' ? badgeInfo.text : null}
+                  thumbnailUrl={content.thumbnailUrl}
+                  category={content.category}
+                  viewCount={content.viewCount || 0}
+                />
+              );
+            })}
+          </div>
+        )}
 
         {/* 페이지네이션 */}
+        {!loading && !error && contents.length > 0 && (
         <div className="mt-12 flex justify-center gap-2">
-          <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
+            <button
+              onClick={handlePrevPage}
+              disabled={page === 0}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                page === 0
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
             이전
           </button>
           <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-semibold">
-            1
+              {page + 1}
           </button>
-          <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
-            2
-          </button>
-          <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
-            3
-          </button>
-          <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-50 transition">
+            <button
+              onClick={handleNextPage}
+              disabled={!hasNext}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                !hasNext
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
+              }`}
+            >
             다음
           </button>
         </div>
+        )}
       </div>
     </div>
   );

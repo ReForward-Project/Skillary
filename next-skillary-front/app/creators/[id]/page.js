@@ -6,6 +6,7 @@ import { useState, use, useEffect, useRef } from 'react';
 import { creators } from '../components/data';
 import { popularContents } from '../../components/popularContentsData';
 import PopularCard from '../../components/PopularCard';
+import { getContentsByCreator } from '../../api/contents';
 
 export default function CreatorProfilePage({ params }) {
   const { id } = use(params);
@@ -31,8 +32,94 @@ export default function CreatorProfilePage({ params }) {
     );
   }
 
-  // 해당 크리에이터의 콘텐츠 필터링
-  const creatorContents = popularContents.filter(content => content.author === creator.name);
+  const [creatorContents, setCreatorContents] = useState([]);
+  const [loadingContents, setLoadingContents] = useState(true);
+
+  // 크리에이터의 콘텐츠 로드
+  useEffect(() => {
+    async function loadCreatorContents() {
+      if (!creator) return;
+      
+      setLoadingContents(true);
+      try {
+        const data = await getContentsByCreator(creator.id, 0, 20);
+        const apiContents = data.content || [];
+        
+        // id 1~4에 대해 실제 데이터가 있는지 확인
+        const contentIds = [1, 2, 3, 4];
+        const existingIds = apiContents.map(c => c.contentId).filter(id => contentIds.includes(id));
+        
+        // id 1~4가 모두 실제 데이터로 존재하면 API 데이터 사용, 아니면 목업 데이터 사용
+        if (existingIds.length === 4 && apiContents.length >= 4) {
+          setCreatorContents(apiContents);
+        } else {
+          // 임시 데이터를 API 형식으로 변환
+          const fallbackContents = popularContents
+            .filter(content => content.author === creator.name)
+            .map((item) => ({
+              contentId: item.id,
+              title: item.title,
+              description: item.description,
+              creatorName: item.author,
+              createdAt: new Date().toISOString(),
+              thumbnailUrl: null,
+              category: item.category || 'ETC',
+              planId: item.badge === '구독자 전용' && item.badgeType === 'badge' ? 1 : null,
+              price: item.badgeType === 'price' ? parseInt(item.price.replace(/[^0-9]/g, '')) : null
+            }));
+          setCreatorContents(fallbackContents);
+        }
+      } catch (err) {
+        console.error('크리에이터 콘텐츠 로드 실패:', err);
+        // 에러 시 임시 데이터 사용
+        const fallbackContents = popularContents
+          .filter(content => content.author === creator.name)
+          .map((item) => ({
+            contentId: item.id,
+            title: item.title,
+            description: item.description,
+            creatorName: item.author,
+            createdAt: new Date().toISOString(),
+            thumbnailUrl: null,
+            category: item.category || 'ETC',
+            planId: item.badge === '구독자 전용' && item.badgeType === 'badge' ? 1 : null,
+            price: item.badgeType === 'price' ? parseInt(item.price.replace(/[^0-9]/g, '')) : null
+          }));
+        setCreatorContents(fallbackContents);
+      } finally {
+        setLoadingContents(false);
+      }
+    }
+    loadCreatorContents();
+  }, [creator]);
+
+  // 날짜 포맷팅
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  // 가격 포맷팅
+  const formatPrice = (price) => {
+    if (!price) return null;
+    return `₩${price.toLocaleString()}`;
+  };
+
+  // 배지 타입 결정
+  const getBadgeInfo = (content) => {
+    if (content.planId) {
+      return { type: 'badge', text: '구독자 전용' };
+    } else if (content.price) {
+      return { type: 'price', text: formatPrice(content.price) };
+    } else {
+      return { type: 'badge', text: '무료' };
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -166,24 +253,30 @@ export default function CreatorProfilePage({ params }) {
           </button>
         </div>
 
-        {creatorContents.length > 0 ? (
+        {loadingContents ? (
+          <div className="text-center py-12">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-black"></div>
+          </div>
+        ) : creatorContents.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {creatorContents.map((content) => (
-              <PopularCard
-                key={content.id}
-                id={content.id}
-                title={content.title}
-                description={content.description}
-                author={content.author}
-                date={content.date}
-                badge={content.badge}
-                badgeType={content.badgeType}
-                price={content.price}
-                emoji={content.emoji}
-                gradientFrom={content.gradientFrom}
-                gradientTo={content.gradientTo}
-              />
-            ))}
+            {creatorContents.map((content) => {
+              const badgeInfo = getBadgeInfo(content);
+              return (
+                <PopularCard
+                  key={content.contentId}
+                  id={content.contentId}
+                  title={content.title}
+                  description={content.description}
+                  author={content.creatorName}
+                  date={formatDate(content.createdAt)}
+                  badge={badgeInfo.text}
+                  badgeType={badgeInfo.type}
+                  price={badgeInfo.type === 'price' ? badgeInfo.text : null}
+                  thumbnailUrl={content.thumbnailUrl}
+                  category={content.category}
+                />
+              );
+            })}
           </div>
         ) : (
           <div className="bg-gray-50 rounded-lg p-16 text-center">

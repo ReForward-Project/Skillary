@@ -2,8 +2,9 @@
 // - 클라이언트 번들에서 NEXT_PUBLIC_* 환경변수는 "빌드/실행 시점에 주입"됩니다.
 // - 값이 비어있으면 fullUrl이 "undefined/..."가 되어 프론트(3000)로 잘못 요청이 나갈 수 있어
 //   로컬 개발 기본값을 둡니다.
-const DEFAULT_API_URL = 'http://localhost:8080';
+const DEFAULT_API_URL = 'http://localhost:8080/api'; // .env.dev는 '/api'로 설정되어 있음 - 관련 수정 : (api경로수정)
 const API_URL = process.env.NEXT_PUBLIC_FRONT_API_URL || DEFAULT_API_URL;
+
 
 let refreshInFlight = null;
 
@@ -11,7 +12,7 @@ async function attemptRefresh() {
     if (refreshInFlight) return refreshInFlight;
 
     refreshInFlight = (async () => {
-        const refreshUrl = `${API_URL}/api/auth/refresh`;
+        const refreshUrl = `${API_URL}/auth/refresh`; // (api경로수정)
         const res = await fetch(refreshUrl, {
             method: 'POST',
             headers: { Accept: 'text/plain' },

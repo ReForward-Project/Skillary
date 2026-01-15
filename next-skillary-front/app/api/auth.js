@@ -21,7 +21,7 @@ export async function login(email, password) {
   await baseRequest(
     'POST',
     TEXT_HEADERS,
-    '/api/auth/login',
+    '/auth/login', // (api경로수정)
     JSON.stringify({ email, password }),
     '로그인에 실패했습니다.',
     true // credentials include (쿠키 수신/전송)
@@ -34,7 +34,7 @@ export async function refresh() {
   await baseRequest(
     'POST',
     TEXT_HEADERS,
-    '/api/auth/refresh',
+    '/auth/refresh', // (api경로수정)
     null,
     '토큰 갱신에 실패했습니다.',
     true
@@ -47,7 +47,7 @@ export async function logout() {
   await baseRequest(
     'POST',
     TEXT_HEADERS,
-    '/api/auth/logout',
+    '/auth/logout', // (api경로수정)
     null,
     '로그아웃에 실패했습니다.',
     true

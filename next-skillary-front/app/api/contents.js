@@ -1,4 +1,4 @@
-import baseRequest from './api';
+import { baseRequest } from './api';
 
 /**
  * 콘텐츠 목록 조회 (페이지네이션)
@@ -95,17 +95,16 @@ export async function getCategories() {
  * @param {Object} [data.post] - 포스트 정보
  * @param {string} [data.post.body] - 포스트 본문
  * @param {string[]} [data.post.postFiles] - 포스트 파일 URL 목록
- * @param {number} creatorId - 크리에이터 ID (X-Creator-Id 헤더)
  * @returns {Promise} 생성된 콘텐츠 정보
  */
-export async function createContent(data, creatorId) {
+export async function createContent(data) {
   return await baseRequest(
     'POST',
-    {
-      'X-Creator-Id': creatorId.toString()
-    },
+    {},
     '/contents',
-    JSON.stringify(data)
+    JSON.stringify(data),
+    '콘텐츠 생성 중 오류가 발생했습니다.',
+    true // credentials: include (쿠키 전송)
   );
 }
 
@@ -122,32 +121,45 @@ export async function createContent(data, creatorId) {
  * @param {Object} [data.post] - 포스트 정보
  * @param {string} [data.post.body] - 포스트 본문
  * @param {string[]} [data.post.postFiles] - 포스트 파일 URL 목록
- * @param {number} creatorId - 크리에이터 ID (X-Creator-Id 헤더)
  * @returns {Promise} 수정된 콘텐츠 정보
  */
-export async function updateContent(contentId, data, creatorId) {
+export async function updateContent(contentId, data) {
   return await baseRequest(
     'PUT',
-    {
-      'X-Creator-Id': creatorId.toString()
-    },
+    {},
     `/contents/${contentId}`,
-    JSON.stringify(data)
+    JSON.stringify(data),
+    '콘텐츠 수정 중 오류가 발생했습니다.',
+    true // credentials: include (쿠키 전송)
   );
 }
 
 /**
  * 콘텐츠 삭제
  * @param {number} contentId - 콘텐츠 ID
- * @param {number} creatorId - 크리에이터 ID (X-Creator-Id 헤더)
  * @returns {Promise} null (204 No Content)
  */
-export async function deleteContent(contentId, creatorId) {
+export async function deleteContent(contentId) {
   return await baseRequest(
     'DELETE',
-    {
-      'X-Creator-Id': creatorId.toString()
-    },
-    `/contents/${contentId}`
+    {},
+    `/contents/${contentId}`,
+    null,
+    '콘텐츠 삭제 중 오류가 발생했습니다.',
+    true // credentials: include (쿠키 전송)
   );
 }
+
+/**
+ * [TODO] 크리에이터의 구독 플랜 목록 조회
+ * 플랜 담당자가 API 작업 완료 후 사용할 수 있습니다.
+ * @param {number} creatorId - 크리에이터 ID
+ * @returns {Promise} 구독 플랜 목록
+ */
+// export async function getSubscriptionPlansByCreator(creatorId) {
+//   return await baseRequest(
+//     'GET',
+//     {},
+//     `/subscription-plans/creators/${creatorId}` // 플랜 담당자가 작업할 예정인 API 엔드포인트
+//   );
+// }
