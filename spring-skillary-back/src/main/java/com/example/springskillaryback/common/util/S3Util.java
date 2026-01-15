@@ -1,4 +1,4 @@
-package com.example.springskillaryback.config;
+package com.example.springskillaryback.common.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +12,7 @@ import software.amazon.awssdk.services.s3.S3Client;
 
 @Slf4j
 @Configuration
-public class S3Config {
+public class S3Util {
 
 	@Value("${aws.access-key-id:}")
 	private String accessKeyId;

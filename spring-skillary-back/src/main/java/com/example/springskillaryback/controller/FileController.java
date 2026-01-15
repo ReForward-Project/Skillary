@@ -14,7 +14,7 @@ import java.io.IOException;
 @RestController
 @RequestMapping("/api/files")
 @RequiredArgsConstructor
-public class FileUploadController {
+public class FileController {
 
 	private final FileService fileService;
 
