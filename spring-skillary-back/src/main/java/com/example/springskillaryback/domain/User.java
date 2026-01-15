@@ -1,10 +1,7 @@
 package com.example.springskillaryback.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.LastModifiedBy;
 
@@ -31,7 +28,8 @@ public class User {
 	@Column(nullable = false)
 	private String password;
 
-	@Column(nullable = false, unique = true, length = 100)
+	@Setter
+    @Column(nullable = false, unique = true, length = 100)
 	private String nickname;
 
 	@CreationTimestamp
@@ -39,6 +37,9 @@ public class User {
 
 	@LastModifiedBy
 	private LocalDateTime updatedAt;
+
+    @Builder.Default
+    private Byte subscribedCreatorCount = 0;
 
 	@Builder.Default
 	@ManyToMany
@@ -66,4 +67,5 @@ public class User {
 	@OneToMany
 	@JoinColumn(name = "user_id")
 	private List<Order> orders = new ArrayList<>();
+
 }

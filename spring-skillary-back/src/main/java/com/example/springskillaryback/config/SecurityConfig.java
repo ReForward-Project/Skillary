@@ -27,7 +27,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/error", "/api/auth/register", "/api/auth/login"
                                 , "/api/auth/send-confirm", "/api/auth/send-code", "/api/auth/check-nickname"
-                                , "/api/auth/refresh", "/api/auth/logout").permitAll()
+                                , "/api/auth/refresh", "/api/auth/logout"
+                                , "/api/creators/profile/*"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .cors(cors -> cors.configurationSource(configurationSource()))

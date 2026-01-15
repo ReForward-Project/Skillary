@@ -33,8 +33,8 @@ public class Creator {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Byte creatorId;
 
-//	@Column(length = 100, nullable = false, unique = true)
-//	private String displayName;
+	@Column(length = 100, nullable = false, unique = true)
+	private String displayName;
 
     private String introduction;
 

@@ -16,6 +16,16 @@ export default function Header() {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
+    // 네트워크 호출 없이도(루트에서 refresh 호출 방지) 로그인 UI 상태를 유지하기 위한 플래그
+    try {
+      const v = localStorage.getItem('isAuthed');
+      setIsAuthed(v === '1');
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
@@ -55,10 +65,21 @@ export default function Header() {
     // 로그인/회원가입 페이지에서는 refresh 호출 자체를 하지 않음(401 요청이 콘솔/네트워크에 뜨는 것 방지)
     if (pathname === '/auth/login' || pathname === '/auth/register') {
       setIsAuthed(false);
+      try {
+        localStorage.removeItem('isAuthed');
+      } catch {
+        // ignore
+      }
       return;
     }
     const ok = await silentRefresh();
     setIsAuthed(!!ok);
+    try {
+      if (ok) localStorage.setItem('isAuthed', '1');
+      else localStorage.removeItem('isAuthed');
+    } catch {
+      // ignore
+    }
   };
 
   const handleLogout = async () => {
@@ -66,6 +87,11 @@ export default function Header() {
       await apiLogout();
     } finally {
       setIsAuthed(false);
+      try {
+        localStorage.removeItem('isAuthed');
+      } catch {
+        // ignore
+      }
     }
   };
 
@@ -99,20 +125,22 @@ export default function Header() {
               </Link>
             </nav>
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <button
-                  onClick={() => handleToggleAlert()}
-                  className="text-gray-700 hover:text-black transition relative"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                  </svg>
-                  {isAlertOpen && (
-                    <span className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></span>
-                  )}
-                </button>
-                <Alert isOpen={isAlertOpen} onClose={handleCloseAlert} />
-              </div>
+              {isAuthed && (
+                <div className="relative">
+                  <button
+                    onClick={() => handleToggleAlert()}
+                    className="text-gray-700 hover:text-black transition relative"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                    {isAlertOpen && (
+                      <span className="absolute top-0 right-0 w-2 h-2 bg-blue-500 rounded-full"></span>
+                    )}
+                  </button>
+                  <Alert isOpen={isAlertOpen} onClose={handleCloseAlert} />
+                </div>
+              )}
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => {
