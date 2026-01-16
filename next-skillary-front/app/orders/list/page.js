@@ -124,7 +124,7 @@ export default function OrdersListPage() {
                           )}
                         </div>
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusStyles(order.orderStatus)}`}>
-                          {console.log(order.orderStatus)}
+                          {console.log('order status: ', order.orderStatus)}
                           {order.orderStatus}
                         </span>
                       </div>

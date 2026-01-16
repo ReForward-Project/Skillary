@@ -30,8 +30,7 @@ export default function SingleOrderPage() {
     fetchData();
   }, []);
 
-  // 구독 플랜 또는 콘텐츠가 없으면 에러 표시
-  if (!orderResponse) {
+  if (!orderId && !contentId) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -43,7 +42,8 @@ export default function SingleOrderPage() {
       </div>
     );
   }
-
+  
+  // 구독 플랜 또는 콘텐츠가 없으면 에러 표시
   if (!orderResponse) return <div className="p-10 text-center">로딩 중...</div>;
 
   const handlePayment = async () => {

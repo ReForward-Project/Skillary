@@ -22,7 +22,6 @@ export default function BillingOrderPage() {
     if (orderId) {
       setOrderResponse(await retrieveOrder(orderId));
     } else {
-
       setOrderResponse(await planOrder(planId));
     }
 
@@ -34,7 +33,7 @@ export default function BillingOrderPage() {
   }, []);
 
   // 구독 플랜 또는 콘텐츠가 없으면 에러 표시
-  if (!planId) {
+  if (!planId && !orderId) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -47,7 +46,7 @@ export default function BillingOrderPage() {
     );
   }
 
-  if (orderResponse === null) return <div className="p-10 text-center">로딩 중...</div>;
+  if (!orderResponse) return <div className="p-10 text-center">로딩 중...</div>;
 
   const handlePayment = async () => {
     try {

@@ -14,9 +14,8 @@ public record OrderResponseDto(
 	String creatorId,
 	boolean isPlan
 ) {
-
 	public static OrderResponseDto from(Order order) {
-		System.out.println(order);
+		System.out.println("\n\n\n"+order+"\n\n\n");
 		if (order.getSubscriptionPlan() != null)
 			return new OrderResponseDto(order.getOrderId().toString(),
 			                            order.getSubscriptionPlan().getName(),
