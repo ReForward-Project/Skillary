@@ -270,6 +270,7 @@ export default function ContentsPage() {
                   title={content.title}
                   description={content.description}
                   author={content.creatorName}
+                  profileImageUrl={content.profileImageUrl}
                   date={formatDate(content.createdAt)}
                   badge={badgeInfo.text}
                   badgeType={badgeInfo.type}

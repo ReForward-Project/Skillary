@@ -63,23 +63,25 @@ export default function CommentItem({
               </div>
               
               <div className="flex items-center gap-2">
-                <button
-                  onClick={async () => {
-                    await onToggleLike(comment.commentId).catch(err => {
-                      console.error('좋아요 처리 중 오류 (상태는 새로고침으로 동기화됨):', err);
-                    });
-                  }}
-                  className={`flex items-center gap-1 transition ${
-                    isLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
-                  }`}
-                >
-                  <svg className="w-4 h-4" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                  <span className="text-xs">{formatCount(likeCount)}</span>
-                </button>
+                {!comment.isDeleted && (
+                  <button
+                    onClick={async () => {
+                      await onToggleLike(comment.commentId).catch(err => {
+                        console.error('좋아요 처리 중 오류 (상태는 새로고침으로 동기화됨):', err);
+                      });
+                    }}
+                    className={`flex items-center gap-1 transition ${
+                      isLiked ? 'text-red-500' : 'text-gray-400 hover:text-red-500'
+                    }`}
+                  >
+                    <svg className="w-4 h-4" fill={isLiked ? 'currentColor' : 'none'} stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                    </svg>
+                    <span className="text-xs">{formatCount(likeCount)}</span>
+                  </button>
+                )}
                 
-                {isCommentOwner && (
+                {isCommentOwner && !comment.isDeleted && (
                   <div className="relative">
                     <button
                       onClick={() => setShowMenu(!showMenu)}
@@ -156,18 +158,26 @@ export default function CommentItem({
               </div>
             ) : (
               <>
-                <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap break-words mt-1">
-                  {comment.comment}
-                </p>
-                {canComment && depth === 0 && (
-                  <div className="mt-2">
-                    <button
-                      onClick={() => setIsReplying(!isReplying)}
-                      className="text-xs text-gray-500 hover:text-gray-700 transition"
-                    >
-                      답글
-                    </button>
-                  </div>
+                {comment.isDeleted ? (
+                  <p className="text-gray-400 italic text-sm mt-1">
+                    삭제된 댓글입니다
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-gray-800 text-sm leading-relaxed whitespace-pre-wrap break-words mt-1">
+                      {comment.comment}
+                    </p>
+                    {canComment && depth === 0 && (
+                      <div className="mt-2">
+                        <button
+                          onClick={() => setIsReplying(!isReplying)}
+                          className="text-xs text-gray-500 hover:text-gray-700 transition"
+                        >
+                          답글
+                        </button>
+                      </div>
+                    )}
+                  </>
                 )}
                 
                 {isReplying && (

@@ -349,6 +349,7 @@ public class ContentServiceImpl implements ContentService {
 			content.getCreatedAt(),
 			content.getUpdatedAt(),
 			content.getViewCount(),
+			content.getLikeCount(),
 			postDto,
 			isOwner
 		);
