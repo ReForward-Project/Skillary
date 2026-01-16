@@ -9,7 +9,6 @@ export default async function baseRequest(
     credentials = false,
 ) {     
     const fullUrl = `${API_URL}${url}`;
-    console.log('fullUrl: ', fullUrl);
 
     try {
         const fetchOptions = {
@@ -25,6 +24,8 @@ export default async function baseRequest(
             fetchOptions.body = body;
         }
 
+        console.log(fullUrl);
+        console.log(fetchOptions);
         let response = await fetch(fullUrl, fetchOptions);
 
         // 401 Unauthorized 처리
@@ -50,5 +51,6 @@ export default async function baseRequest(
         
     } catch (e) {
         console.log(`[API Error] ${fullUrl}:`, e.message);
+        console.log(e);
     }
 }

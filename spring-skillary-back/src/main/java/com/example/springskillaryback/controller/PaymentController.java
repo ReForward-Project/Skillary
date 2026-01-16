@@ -14,6 +14,7 @@ import com.example.springskillaryback.common.dto.PlanOrderResponseDto;
 import com.example.springskillaryback.common.dto.SingleOrderRequestDto;
 import com.example.springskillaryback.common.dto.SingleOrderResponseDto;
 import com.example.springskillaryback.domain.Content;
+import com.example.springskillaryback.domain.Order;
 import com.example.springskillaryback.domain.Payment;
 import com.example.springskillaryback.service.PaymentService;
 import jakarta.validation.Valid;
@@ -125,7 +126,6 @@ public class PaymentController {
 			@RequestBody
 			CompleteBillingPaymentRequestDto completeBillingPaymentRequestDto
 	) {
-		log.info(completeBillingPaymentRequestDto.toString());
 		Payment payment = paymentService.completeBillingPayment(
 				completeBillingPaymentRequestDto.email(),
 				completeBillingPaymentRequestDto.customerKey(),
@@ -168,5 +168,16 @@ public class PaymentController {
 			throw new IllegalArgumentException("입력값 오류");
 		boolean result = paymentService.withdrawPayment(paymentId, cancelReason);
 		return ResponseEntity.ok(result);
+	}
+
+	@GetMapping("/restart/{orderId}")
+	public ResponseEntity<?> restartOrder(
+			@PathVariable String orderId
+	) {
+		if (orderId == null) throw new IllegalArgumentException("주문 정보 입력 값이 없습니다.");
+		Order order = paymentService.retrieveOrder(orderId);
+		if (order.getContent() != null) return ResponseEntity.ok(SingleOrderResponseDto.from(order));
+		if (order.getSubscriptionPlan() != null) return ResponseEntity.ok(PlanOrderResponseDto.from(order));
+		throw new RuntimeException("시스템에 잘못된 값이 저장되어 있습니다...");
 	}
 }

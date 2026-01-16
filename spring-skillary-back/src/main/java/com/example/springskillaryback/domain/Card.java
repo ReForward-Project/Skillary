@@ -26,9 +26,6 @@ public class Card {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Byte cardId;
 
-	@Column(unique = true, nullable = false)
-	private String authKey;
-
 	@Column(nullable = false)
 	private String cardName;
 
@@ -61,9 +58,8 @@ public class Card {
 	private String billingKey;
 
 	// 생성자도 수정
-	public Card(String authKey, String cardCompany, String cardNumber,
+	public Card(String cardCompany, String cardNumber,
 	            String cardType, String ownerType, String billingKey, User user) {
-		this.authKey = authKey;
 		this.cardName = cardCompany;  // 또는 cardCompany 필드 따로
 		this.cardNumber = cardNumber;
 		this.cardCompany = cardCompany;

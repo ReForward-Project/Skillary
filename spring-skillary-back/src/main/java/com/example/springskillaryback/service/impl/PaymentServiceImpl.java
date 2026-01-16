@@ -59,6 +59,7 @@ public class PaymentServiceImpl implements PaymentService {
 		User user = findUserOrElseThrow(email);
 		if (!user.getCustomerKey().toString().equals(customerKey))
 			throw new IllegalArgumentException("로그인부터 다시 이용해주세요");
+
 		JsonNode response = tossPaymentsClient.issueBillingKey(authKey, customerKey);
 
 		String billingKey = response.path("billingKey").asString();
@@ -67,7 +68,8 @@ public class PaymentServiceImpl implements PaymentService {
 		String cardType = response.path("card").path("cardType").asString();
 		String ownerType = response.path("card").path("ownerType").asString();
 
-		Card card = new Card(authKey, cardCompany, cardNumber, cardType, ownerType, billingKey, user);
+		cardRepository.resetDefaultStatus(user.getUserId().toString());
+		Card card = new Card(cardCompany, cardNumber, cardType, ownerType, billingKey, user);
 		cardRepository.save(card);
 		return user.addCard(card);
 	}
@@ -135,6 +137,7 @@ public class PaymentServiceImpl implements PaymentService {
 		                                 .orElseThrow(() -> new RuntimeException("등록된 기본 카드가 없습니다."));
 
 		var tossResponse = tossPaymentsClient.payWithBillingKey(
+				user.getIdempotencyKey().toString(),
 				defaultCard.getBillingKey(),
 				customerKey,
 				orderId,
@@ -164,18 +167,16 @@ public class PaymentServiceImpl implements PaymentService {
 			String orderId,
 			int credit
 	) {
-		log.info("paymentKey {}", paymentKey);
-		log.info("orderId {}", orderId);
-		log.info("credit {}", credit);
 		Order order = findOrderOrElseThrow(orderId);
 
 		if (!order.verifyWith(credit))
 			throw new RuntimeException("주문 정보가 왜곡됐습니다.");
 
-		if (order.isPaid())
+		if (order.isPaid() || paymentRepository.existsByPaymentKey(paymentKey))
 			throw new IllegalArgumentException("이미 처리된 주문입니다.");
 
 		var tossResponse = tossPaymentsClient.confirm(
+				order.getUser().getIdempotencyKey().toString(),
 				paymentKey,
 				orderId,
 				credit
@@ -218,7 +219,9 @@ public class PaymentServiceImpl implements PaymentService {
 		if (payment.getCreditStatus() == CreditStatusEnum.CANCELED)
 			throw new IllegalStateException("이미 취소된 결제입니다.");
 
-		var tossResponse = tossPaymentsClient.withdraw(payment.getPaymentKey(), cancelReason);
+		var tossResponse = tossPaymentsClient.withdraw(
+				payment.getUser().getIdempotencyKey().toString(),
+				payment.getPaymentKey(), cancelReason);
 
 		if ("CANCELED".equals(tossResponse.path("status").asString())) {
 			payment.cancel();
@@ -226,6 +229,12 @@ public class PaymentServiceImpl implements PaymentService {
 		}
 
 		return false;
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public Order retrieveOrder(String orderId) {
+		return findOrderOrElseThrow(orderId);
 	}
 
 	private SubscriptionPlan findPlanOrElseThrow(byte planId) {

@@ -9,5 +9,4 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "toss.payments")
 public class TossPaymentsProperty {
 	private String secretKey;
-	private String clientKey;
 }

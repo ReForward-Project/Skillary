@@ -2,22 +2,31 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { confirmBillingPay, planOrder } from '@/api/payments';
 
 export default function BillingOrderPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const isFetched = useRef(false);
 
   const [orderResponse, setOrderResponse] = useState(null);
 
+  const orderId = searchParams.get('orderId');
   const planId = searchParams.get('planId');
 
   const fetchData = async () => {
-    const res = await planOrder(planId);
-    console.log("plan order: ", res);
-    setOrderResponse(res);
+    if (isFetched.current) return;
+
+    if (orderId) {
+      setOrderResponse(await retrieveOrder(orderId));
+    } else {
+
+      setOrderResponse(await planOrder(planId));
+    }
+
+    isFetched.current = true;
   };
 
   useEffect(() => {
@@ -48,6 +57,7 @@ export default function BillingOrderPage() {
         orderResponse.planName,
         orderResponse.price
       );
+      console.log('result', result);
       setOrderResponse(null);
       const paymentKey = result.paymentKey;
       const orderId = result.orderId;

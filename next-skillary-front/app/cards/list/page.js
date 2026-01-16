@@ -10,6 +10,7 @@ export default function CardListPage() {
 
   const fetchCards = async () => {
     try {
+      setLoading(true);
       const response = await pagingCard(0, 10);
       // Spring Page 객체 구조에서는 response.content 안에 데이터 배열이 들어있습니다.
       setCards(response.content || []);

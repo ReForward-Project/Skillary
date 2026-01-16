@@ -20,13 +20,15 @@ public class TossPaymentsClient {
 
 	private final RestTemplate restTemplate;
 	private final String secretKey;
-	private final String clientKey;
 
-	public JsonNode issueBillingKey(String authKey, String customerKey) {
+	public JsonNode issueBillingKey(
+			String authKey,
+			String customerKey
+	) {
 		HttpEntity<Map<String, String>> request = new HttpEntity<>(Map.of(
 				"authKey", authKey,
 				"customerKey", customerKey
-		), createHeaders());
+		), createHeaders(null));
 
 		/* 요청 전송 */
 		ResponseEntity<JsonNode> response = restTemplate.postForEntity(
@@ -39,6 +41,7 @@ public class TossPaymentsClient {
 	}
 
 	public JsonNode payWithBillingKey(
+			String idempotencyKey,
 			String billingKey,
 			String customerKey,
 			String orderId,
@@ -50,7 +53,7 @@ public class TossPaymentsClient {
 				"orderId", orderId,
 				"orderName", orderName,
 				"customerKey", customerKey
-		), createHeaders());
+		), createHeaders(idempotencyKey));
 
 		ResponseEntity<JsonNode> response = restTemplate.postForEntity(
 				CONFIRM_BILLING_REQUEST_URL.formatted(billingKey),
@@ -62,6 +65,7 @@ public class TossPaymentsClient {
 	}
 
 	public JsonNode confirm(
+			String idempotencyKey,
 			String paymentKey,
 			String orderId,
 			int amount
@@ -70,7 +74,7 @@ public class TossPaymentsClient {
 				"paymentKey", paymentKey,
 				"orderId", orderId,
 				"amount", String.valueOf(amount)
-		), createHeaders());
+		), createHeaders(idempotencyKey));
 
 		/* 요청 전송 */
 		ResponseEntity<JsonNode> response = restTemplate.postForEntity(
@@ -82,10 +86,10 @@ public class TossPaymentsClient {
 		return response.getBody();
 	}
 
-	public JsonNode withdraw(String paymentKey, String cancelReason) {
+	public JsonNode withdraw(String idempotencyKey, String paymentKey, String cancelReason) {
 		HttpEntity<Map<String, String>> request = new HttpEntity<>(Map.of(
 				"cancelReason", cancelReason
-		), createHeaders());
+		), createHeaders(idempotencyKey));
 
 		/* 요청 전송 */
 		ResponseEntity<JsonNode> response = restTemplate.postForEntity(
@@ -97,11 +101,13 @@ public class TossPaymentsClient {
 		return response.getBody();
 	}
 
-	private HttpHeaders createHeaders() {
+	private HttpHeaders createHeaders(String idempotencyKey) {
 		HttpHeaders headers = new HttpHeaders();
 		String encodedKey = Base64.getEncoder()
 		                          .encodeToString((secretKey + ":").getBytes());
 		headers.set("Authorization", "Basic " + encodedKey);
+		if (idempotencyKey != null)
+			headers.set("Idempotency-Key", idempotencyKey);
 		headers.setContentType(MediaType.APPLICATION_JSON);
 		return headers;
 	}

@@ -21,8 +21,7 @@ public class TossPaymentsConfig {
 	) {
 		return new TossPaymentsClient(
 				restTemplate,
-				tossPaymentsProperty.getSecretKey(),
-				tossPaymentsProperty.getClientKey()
+				tossPaymentsProperty.getSecretKey()
 		);
 	}
 

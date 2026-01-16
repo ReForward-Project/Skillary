@@ -1,5 +1,6 @@
 package com.example.springskillaryback.domain;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -10,6 +11,8 @@ import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PostPersist;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -37,11 +40,13 @@ public class User {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Byte userId;
 
-	@Column(nullable = false, unique = true)
+	@Column(nullable = false, unique = true, columnDefinition = "BINARY(16)")
 	private UUID customerKey;
-
+	@Column(nullable = false, unique = true, columnDefinition = "BINARY(16)")
+	private UUID idempotencyKey;
 	@PrePersist
 	public void prePersist() {
+		this.idempotencyKey = UUID.randomUUID();
 		this.customerKey = UUID.randomUUID();
 	}
 

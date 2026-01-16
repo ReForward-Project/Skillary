@@ -1,20 +1,29 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
-import { singleOrder, confirmSinglePay } from '@/api/payments';
+import { singleOrder, confirmSinglePay, restartOrder } from '@/api/payments';
 
 export default function SingleOrderPage() {
   const searchParams = useSearchParams();
 
   const [orderResponse, setOrderResponse] = useState(null);
+  const orderId = searchParams.get('orderId');
   const contentId = searchParams.get('contentId');
+  const isFetched = useRef(false);
 
   const fetchData = async () => {
-    const res = await singleOrder(contentId);
-    console.log("single order: ", res);
-    setOrderResponse(res);
+    if (isFetched.current) return;
+
+    if (orderId) {
+      const res = await restartOrder(orderId);
+      console.log(res);
+      setOrderResponse(res);
+    } else {
+      setOrderResponse(await singleOrder(contentId));
+    }
+    isFetched.current = true;
   };
 
   useEffect(() => {
@@ -22,7 +31,7 @@ export default function SingleOrderPage() {
   }, []);
 
   // 구독 플랜 또는 콘텐츠가 없으면 에러 표시
-  if (!contentId) {
+  if (!orderResponse) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -38,7 +47,6 @@ export default function SingleOrderPage() {
   if (!orderResponse) return <div className="p-10 text-center">로딩 중...</div>;
 
   const handlePayment = async () => {
-    console.log('1');
     try {
       
       await confirmSinglePay(

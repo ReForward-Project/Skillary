@@ -4,16 +4,14 @@ import { loadTossPayments } from '@tosspayments/tosspayments-sdk';
 const clientKey = 'test_ck_yL0qZ4G1VO11Mw99NZLv8oWb2MQY';
 
 export async function getCustomerKey(email) {
-  const res = await baseRequest(
+  return (await baseRequest(
     'POST',
     {},
     '/payments/customer-key',
     email,
     'customer key 를 가져오지 못했습니다.',
     true
-  );
-
-  return res.customerKey;
+  )).customerKey;
 }
 
 export async function singleOrder(contentId) {
@@ -48,29 +46,25 @@ export async function planOrder(planId) {
 // 카드 등록
 export async function billingAuth(customerKey) {
   const tossPayments = await loadTossPayments(clientKey);
-  if (!window.TossPayments) {
+  if (!window.TossPayments)
     throw new Error("토스페이먼츠 SDK가 로드되지 않았습니다.");
-  }
   try {
     const payment = tossPayments.payment({ customerKey });
 
-    const result = await payment.requestBillingAuth({
+    return await payment.requestBillingAuth({
       method: 'CARD',
       successUrl: window.location.origin + '/cards/success',
       failUrl: window.location.origin + '/cards/fail',
       customerEmail: 'email@email.com',
       customerName: '박성훈',
     });
-
-    return result;
   } catch (error) {
-    console.error("Billing Auth Error:", error);
     alert(error.message || "카드 등록 중 오류가 발생했습니다.");
   }
 }
 
 export async function createCard(customerKey, authKey) {
-  const result = await baseRequest(
+  return await baseRequest(
     'POST',
     {},
     `/payments/cards/create`,
@@ -82,12 +76,10 @@ export async function createCard(customerKey, authKey) {
     '서버에 결제 수단 등록 실패하였습니다.',
     true
   );
-
-  console.log('result', result);
 }
 
 export async function pagingCard(page = 0, size = 10) {
-  const res = await baseRequest(
+  return await baseRequest(
     'GET',
     {},
     `/payments/cards?page=${page}&size=${size}`, // 백엔드 엔드포인트에 맞게 수정
@@ -95,8 +87,6 @@ export async function pagingCard(page = 0, size = 10) {
     "카드 목록을 불러오는데 실패했습니다.",
     true
   );
-
-  return res;
 }
 
 
@@ -106,6 +96,20 @@ export async function confirmBillingPay(
   planName,
   amount
 ) {
+  return !!(await baseRequest(
+    'POST',
+    {},
+    `/payments/complete/billing`,
+    JSON.stringify({
+      customerKey: customerKey,
+      email: 'email@email.com',
+      orderId: orderId,
+      planName: planName,
+      amount: amount
+    }),
+    '플랜 결제 실패',
+    true
+  ));
   const response = await baseRequest(
     'POST',
     {},
@@ -136,9 +140,9 @@ export async function confirmSinglePay(
   credit
 ) {
   const tossPayments = await loadTossPayments(clientKey);
-  if (!window.TossPayments) {
+  if (!window.TossPayments)
     throw new Error("토스페이먼츠 SDK가 로드되지 않았습니다.");
-  }
+
   try {
     const payment = tossPayments.payment({ customerKey });
 
@@ -160,7 +164,6 @@ export async function confirmSinglePay(
       },
     });
   } catch (e) {
-    console.log('1234', e.message);
     alert(error.message || "결제 확인 중 오류가 발생했습니다.");
   }
 }
@@ -171,7 +174,7 @@ export async function completeSinglePay(
   paymentKey,
   amount
 ) {
-  const result = await baseRequest(
+  return await baseRequest(
     'POST',
     {},
     `/payments/complete/single`,
@@ -184,32 +187,37 @@ export async function completeSinglePay(
     "지불 정보가 일치하지 않음",
     true
   );
-
-  return result;
 }
 
 export async function pagingPayments(
   page = 0, size = 10
 ) {
-  const result = await baseRequest(
+  return await baseRequest(
     'GET',
     {},
     `/payments?page=${page}&size=${size}`,
     null
   );
-
-  console.log('paging: ',result);
-  return result;
 }
 
 export async function pagingOrder(
   page = 0, size = 10
 ) {
-  const result = await baseRequest(
+  return await baseRequest(
     'GET',
     {},
     `/payments/orders?page=${page}&size=${size}`,
     null
   );
-  return result;
+}
+
+export async function restartOrder(
+  orderId
+) {
+  return await baseRequest(
+    'GET',
+    {},
+    `/payments/restart/${orderId}`,
+    null
+  );
 }

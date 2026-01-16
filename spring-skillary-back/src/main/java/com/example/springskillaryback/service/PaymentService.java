@@ -29,5 +29,5 @@ public interface PaymentService {
 
 	boolean withdrawPayment(byte paymentId, String cancelReason);
 
-	// activateSubscription 은 SubscriptionService 에서 해야 함 여기 선언하면 안돼요...........
+	Order retrieveOrder(String orderId);
 }
