@@ -45,14 +45,21 @@ public class EmailVerificationServiceImpl implements EmailVerificationService {
         // 새 데이터 저장
         emailVerificationRepository.save(new EmailVerification(email, code, expiresAt));
 
-        SimpleMailMessage message = new SimpleMailMessage();
-        message.setTo(email);
-        message.setFrom(properties.getFrom());
-        message.setSubject(properties.getSubject());
-        message.setText("인증 코드: " + code + "\n만료 시간: " + properties.getCodeExpiryMinutes() + "분");
-        
         System.out.println("✅ 인증코드 발송: email=" + email + ", code=" + code);
-        mailSender.send(message);
+        
+        // 이메일 발송 (실패해도 코드는 DB에 저장되어 있음)
+        try {
+            SimpleMailMessage message = new SimpleMailMessage();
+            message.setTo(email);
+            message.setFrom(properties.getFrom());
+            message.setSubject(properties.getSubject());
+            message.setText("인증 코드: " + code + "\n만료 시간: " + properties.getCodeExpiryMinutes() + "분");
+            mailSender.send(message);
+            System.out.println("📧 실제 이메일 발송 성공");
+        } catch (Exception e) {
+            System.err.println("⚠️ 이메일 발송 실패 (개발 환경): " + e.getMessage());
+            System.out.println("💡 콘솔에 출력된 인증코드를 사용하세요: " + code);
+        }
     }
 
     @Override

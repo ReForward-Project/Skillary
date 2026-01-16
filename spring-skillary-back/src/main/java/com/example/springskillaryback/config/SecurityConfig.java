@@ -68,7 +68,7 @@ public class SecurityConfig {
 
         // 노출 헤더
         configuration.setExposedHeaders(List.of(
-                "Authorization", "Set-Cookie"
+                "Authorization", "Set-Cookie", "X-Error-Message"
         ));
 
         configuration.setMaxAge(3600L);

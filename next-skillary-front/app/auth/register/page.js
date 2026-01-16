@@ -4,6 +4,9 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+// API URL 설정
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
+
 export default function RegisterPage() {
     const router = useRouter();
     const [email, setEmail] = useState('');
@@ -48,7 +51,7 @@ export default function RegisterPage() {
         }
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/auth/send-confirm', {
+            const response = await fetch(`${API_BASE_URL}/auth/send-confirm`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -77,7 +80,7 @@ export default function RegisterPage() {
         }
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/auth/send-confirm', {
+            const response = await fetch(`${API_BASE_URL}/auth/send-confirm`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -104,7 +107,7 @@ export default function RegisterPage() {
         }
         setIsLoading(true);
         try {
-            const response = await fetch('http://localhost:8080/api/auth/send-code', {
+            const response = await fetch(`${API_BASE_URL}/auth/send-code`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -177,7 +180,7 @@ export default function RegisterPage() {
         setIsLoading(true);
         try {
             const nicknameCheckResponse = await fetch(
-                `http://localhost:8080/api/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`,
+                `${API_BASE_URL}/auth/check-nickname?nickname=${encodeURIComponent(nickname)}`,
             );
             if (!nicknameCheckResponse.ok) {
                 const errorMessage = nicknameCheckResponse.headers.get('X-Error-Message');
@@ -188,7 +191,7 @@ export default function RegisterPage() {
                 setError('이미 사용 중인 닉네임입니다.');
                 return;
             }
-            const response = await fetch('http://localhost:8080/api/auth/register', {
+            const response = await fetch(`${API_BASE_URL}/auth/register`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
