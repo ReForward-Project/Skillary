@@ -2,6 +2,7 @@ package com.example.springskillaryback.service;
 
 import org.springframework.data.domain.Slice;
 
+import com.example.springskillaryback.common.dto.ContentDeletePreviewDto;
 import com.example.springskillaryback.common.dto.ContentLikeResponseDto;
 import com.example.springskillaryback.common.dto.ContentListResponseDto;
 import com.example.springskillaryback.common.dto.ContentRequestDto;
@@ -29,6 +30,8 @@ public interface ContentService {
 	ContentResponseDto getContent(Byte contentId, Byte userId);
 	
 	void incrementViewCount(Byte contentId);
+	
+	ContentDeletePreviewDto getDeletePreview(Byte contentId, Byte userId);
 	
 	void deleteContent(Byte contentId, Byte userId);
 	

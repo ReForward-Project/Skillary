@@ -5,6 +5,7 @@ import com.example.springskillaryback.common.dto.ContentListResponseDto;
 import com.example.springskillaryback.common.dto.ContentRequestDto;
 import com.example.springskillaryback.common.dto.ContentResponseDto;
 import com.example.springskillaryback.common.dto.PostResponseDto;
+import com.example.springskillaryback.common.dto.ContentDeletePreviewDto;
 import com.example.springskillaryback.domain.CategoryEnum;
 import com.example.springskillaryback.domain.Content;
 import com.example.springskillaryback.domain.Creator;
@@ -20,6 +21,9 @@ import com.example.springskillaryback.repository.SubscriptionPlanRepository;
 import com.example.springskillaryback.repository.UserRepository;
 import com.example.springskillaryback.service.ContentService;
 import com.example.springskillaryback.service.FileService;
+import com.example.springskillaryback.domain.Order;
+import com.example.springskillaryback.domain.OrderStatusEnum;
+import com.example.springskillaryback.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
@@ -28,9 +32,11 @@ import org.springframework.data.domain.Slice;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.time.LocalDateTime;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +49,7 @@ public class ContentServiceImpl implements ContentService {
 	private final FileService fileService;
 	private final ContentLikeRepository contentLikeRepository;
 	private final UserRepository userRepository;
+	private final OrderRepository orderRepository;
 
 	/** 콘텐츠 생성 */
 	@Override
@@ -99,24 +106,34 @@ public class ContentServiceImpl implements ContentService {
 			throw new IllegalArgumentException("권한 없음");
 		}
 
-		Byte checkPlanId = content.getPlan() != null ? content.getPlan().getPlanId() : null;
-		if(requestDto.planId() != null) checkPlanId = requestDto.planId();
-		Integer checkPrice = content.getPrice();
-		if(requestDto.price() != null) checkPrice = requestDto.price();
+		// 구독, 단건 동시 설정 검증 처리
+		contentValid(requestDto.planId(), requestDto.price());
 
-		// 구독, 단건 검증 처리
-		contentValid(checkPlanId, checkPrice);
+		boolean hasPlanId = content.getPlan() != null;
+		boolean hasPrice = content.getPrice() != null;
+		boolean isFree = !hasPlanId && !hasPrice;
 
-		// plan price 관련 요청값 반영
-		if (requestDto.planId() != null) {
-			SubscriptionPlan plan = subscriptionPlanRepository.findById(requestDto.planId())
-				.orElseThrow(() -> new IllegalArgumentException("플랜 없음"));
-			content.setPlan(plan);
-			content.setPrice(null);
-		} else if (requestDto.price() != null) {
-			content.setPrice(requestDto.price());
-			content.setPlan(null);
+		boolean reqPlan = requestDto.planId() != null;
+		boolean reqPrice = requestDto.price() != null;
+		boolean reqFree = !reqPlan && !reqPrice;
+
+		if (hasPlanId) {
+			if (reqFree || reqPrice) throw new IllegalStateException("구독 콘텐츠는 다른 과금 유형으로 변경 불가");
+			// 구독 플랜 변경 불가
+			if (reqPlan && !content.getPlan().getPlanId().equals(requestDto.planId())) {
+				throw new IllegalStateException("구독 콘텐츠는 다른 플랜으로 변경 불가");
+			}
 		}
+
+		if (hasPrice) {
+            if (reqFree || reqPlan) throw new IllegalStateException("유료 콘텐츠는 다른 과금 유형으로 변경 불가");
+            // 금액 변경 불가
+            if (reqPrice && !content.getPrice().equals(requestDto.price())) {
+                throw new IllegalStateException("유료 콘텐츠의 가격은 변경 불가");
+            }
+		}
+		if (isFree && (reqPlan || reqPrice)) throw new IllegalStateException("무료 콘텐츠는 다른 과금 유형으로 변경 불가");
+
 
         if(requestDto.title() != null) content.setTitle(requestDto.title());
         if(requestDto.description() != null) content.setDescription(requestDto.description());
@@ -130,7 +147,7 @@ public class ContentServiceImpl implements ContentService {
             content.setThumbnailUrl(requestDto.thumbnailUrl());
         }
 
-        // 본문 수정시
+		// 본문 수정시
 		if (requestDto.post() != null) {
 			if (content.getPost() != null) {
 				Post post = content.getPost();
@@ -222,9 +239,9 @@ public class ContentServiceImpl implements ContentService {
         contentRepository.save(content);
 	}
 
-	/** 콘텐츠 삭제 */
+	/** 삭제 전 확인 */
 	@Override
-	public void deleteContent(Byte contentId, Byte userId) {
+	public ContentDeletePreviewDto getDeletePreview(Byte contentId, Byte userId) {
 		Content content = contentRepository.findById(contentId)
 			.orElseThrow(() -> new IllegalArgumentException("콘텐츠 없음"));
 
@@ -235,11 +252,92 @@ public class ContentServiceImpl implements ContentService {
 			throw new IllegalArgumentException("권한 없음");
 		}
 
-		// 관련 파일 삭제 (S3)
-        deleteAssociatedFiles(content);
+		LocalDateTime deletedAt = calcDeletedAt(contentId);
+		return new ContentDeletePreviewDto(deletedAt != null, deletedAt);
+	}
 
-		// 콘텐츠 삭제
-		contentRepository.delete(content);
+	/** 콘텐츠 삭제 */
+	@Override
+	public void deleteContent(Byte contentId, Byte userId) {
+		Content content = contentRepository.findById(contentId)
+			.orElseThrow(() -> new IllegalArgumentException("콘텐츠 없음"));
+
+		Creator creator = creatorRepository.findByUser_UserId(userId)
+			.orElseThrow(() -> new IllegalStateException("크리에이터 없음"));
+
+		if (!content.getCreator().getCreatorId().equals(creator.getCreatorId())) {
+			throw new IllegalArgumentException("권한 없음");
+		}
+
+		LocalDateTime deletedAt = calcDeletedAt(contentId);
+
+		if (deletedAt != null) {
+			// 단건결제 - soft 삭제 처리
+			content.setDeletedAt(deletedAt);
+			contentRepository.save(content);
+			log.info("[ContentService] 삭제 예정일 설정: contentId={}, deletedAt={}", contentId, deletedAt);
+		} else {
+            // 나머지는 hard 삭제
+			deleteAssociatedFiles(content);
+			contentRepository.delete(content);
+		}
+	}
+
+    /** 삭제 예정일 값 처리 */
+    private LocalDateTime calcDeletedAt(Byte contentId) {
+        Content content = contentRepository.findById(contentId)
+                .orElseThrow(() -> new IllegalArgumentException("콘텐츠 없음"));
+
+        // 단건결제 콘텐츠인지 확인
+        if (content.getPrice() != null) {
+            List<Order> paidOrders = orderRepository.findByContentIdAndStatus(contentId, OrderStatusEnum.PAID);
+
+            if (!paidOrders.isEmpty()) {
+                // 테스트용 - 1분뒤
+                LocalDateTime deletedAt = LocalDateTime.now().plusMinutes(1);
+
+                // payment paid_at 최신일
+                // LocalDateTime latestPayDate = paidOrders.stream()
+                //         .map(order -> order.getPayment().getPaidAt())
+                //         .filter(date -> date != null)
+                //         .max(LocalDateTime::compareTo)
+                //         .orElse(LocalDateTime.now());
+
+                //  paid_at 최신일 기준 - 정산 10일 이전,이후 건 분기
+                // int paymentDay = latestPayDate.toLocalDate().getDayOfMonth();
+                // LocalDate paymentDate = latestPayDate.toLocalDate();
+                // if (paymentDay <= 9) {
+                //     deletedAt = paymentDate.plusMonths(2).withDayOfMonth(10).atTime(0, 0, 0);
+                // } else {
+                //     deletedAt = paymentDate.plusMonths(3).withDayOfMonth(10).atTime(0, 0, 0);
+                // }
+
+                return deletedAt;
+            }
+        }
+        return null;
+    }
+
+	/** 콘텐츠 단건결제 삭제 스케줄러 */
+    // @Scheduled(cron = "0 1 0 10 * ?") // 10일 00:01
+    @Scheduled(fixedDelay = 60000) // 테스트용 - 1분
+	public void deleteScheduledContents() {
+        log.info("[ContentService] deleteScheduledContents 스케줄러 진행");
+
+		LocalDateTime now = LocalDateTime.now();
+		List<Content> contentDeleteList = contentRepository.findContentsForScheduled(now);
+        if(!contentDeleteList.isEmpty()) {
+            for (Content content : contentDeleteList) {
+                try {
+                    // 관련 파일 삭제 후 콘텐츠 삭제
+                    deleteAssociatedFiles(content);
+                    contentRepository.delete(content);
+                } catch (Exception e) {
+                    log.error("[ContentService] 단건결제 스케줄 삭제 오류 확인 : contentId={}, deletedAt={} error={}",
+                        content.getContentId(), content.getDeletedAt(), e.getMessage());
+                }
+            }
+        }
 	}
 
 	/** PostFile 리스트 생성 */
@@ -355,6 +453,7 @@ public class ContentServiceImpl implements ContentService {
 			content.getThumbnailUrl(),
 			content.getCreatedAt(),
 			content.getUpdatedAt(),
+			content.getDeletedAt(),
 			content.getViewCount(),
 			content.getLikeCount(),
 			postDto,
@@ -415,6 +514,7 @@ public class ContentServiceImpl implements ContentService {
 			content.getThumbnailUrl(),
 			content.getCreatedAt(),
 			content.getUpdatedAt(),
+			content.getDeletedAt(),
 			content.getViewCount(),
 			content.getLikeCount()
 		);

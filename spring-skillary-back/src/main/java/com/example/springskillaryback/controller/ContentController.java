@@ -1,6 +1,7 @@
 package com.example.springskillaryback.controller;
 
 import com.example.springskillaryback.common.dto.CategoryResponseDto;
+import com.example.springskillaryback.common.dto.ContentDeletePreviewDto;
 import com.example.springskillaryback.common.dto.ContentLikeResponseDto;
 import com.example.springskillaryback.common.dto.ContentListResponseDto;
 import com.example.springskillaryback.common.dto.ContentRequestDto;
@@ -121,6 +122,22 @@ public class ContentController {
 		
 		ContentResponseDto content = contentService.getContent(contentId, userId);
 		return ResponseEntity.ok(content); // 200
+	}
+
+	@GetMapping("/{contentId}/delete-preview")
+	public ResponseEntity<ContentDeletePreviewDto> getDeletePreview(
+		@PathVariable Byte contentId,
+		Authentication authentication
+	) {
+		Byte userId = Byte.valueOf((String) authentication.getPrincipal());
+		try {
+			ContentDeletePreviewDto preview = contentService.getDeletePreview(contentId, userId);
+			return ResponseEntity.ok(preview); // 200
+		} catch (IllegalStateException e) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 크리에이터만 가능
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build(); // 403 권한 없음
+		}
 	}
 
 	@DeleteMapping("/{contentId}")

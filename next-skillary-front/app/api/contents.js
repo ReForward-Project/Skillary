@@ -64,13 +64,14 @@ export async function getContentsByCreator(creatorId, page = 0, size = 10) {
  * @param {string} category - 카테고리 (예: 'TECH', 'DESIGN', 'BUSINESS' 등)
  * @param {number} page - 페이지 번호 (기본값: 0)
  * @param {number} size - 페이지 크기 (기본값: 10)
+ * @param {string} sort - 정렬 기준 (기본값: 'latest') - 'latest': 최신순, 'popular': 인기순
  * @returns {Promise} 카테고리별 콘텐츠 목록 (Slice)
  */
-export async function getContentsByCategory(category, page = 0, size = 10) {
+export async function getContentsByCategory(category, page = 0, size = 10, sort = 'latest') {
   return await baseRequest(
     'GET',
     {},
-    `/contents/category/${category}?page=${page}&size=${size}`
+    `/contents/category/${category}?page=${page}&size=${size}&sort=${sort}`
   );
 }
 
@@ -133,6 +134,22 @@ export async function updateContent(contentId, data) {
     `/contents/${contentId}`,
     JSON.stringify(data),
     '콘텐츠 수정 중 오류가 발생했습니다.',
+    true // credentials: include (쿠키 전송)
+  );
+}
+
+/**
+ * 삭제 전 확인 - 결제 여부 및 삭제 예정일 조회
+ * @param {number} contentId - 콘텐츠 ID
+ * @returns {Promise} 삭제 예정 정보 (hasPaidUsers, deletedAt)
+ */
+export async function getDeletePreview(contentId) {
+  return await baseRequest(
+    'GET',
+    {},
+    `/contents/${contentId}/delete-preview`,
+    null,
+    '삭제 예정 정보 조회 중 오류가 발생했습니다.',
     true // credentials: include (쿠키 전송)
   );
 }
