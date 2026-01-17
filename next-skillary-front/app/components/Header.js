@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useRef, useEffect } from 'react';
 import Alert from './Alert';
-import { refresh, logout as apiLogout } from '../api/auth';
+import { silentRefresh, logout as apiLogout } from '../api/auth';
 
 export default function Header() {
   const router = useRouter();
@@ -35,12 +35,13 @@ export default function Header() {
   useEffect(() => {
     // httpOnly 쿠키라 FE에서 직접 확인 불가 → refresh로 로그인 여부 판별(201=로그인, 401=비로그인)
     const check = async () => {
-      try {
-        await refresh();
-        setIsAuthed(true);
-      } catch (e) {
+      // 로그인/회원가입 페이지는 공개 페이지 → 로그인 체크 요청 자체를 보내지 않음
+      if (pathname === '/auth/login' || pathname === '/auth/register') {
         setIsAuthed(false);
+        return;
       }
+      const ok = await silentRefresh();
+      setIsAuthed(ok);
     };
     check();
   }, [pathname]);

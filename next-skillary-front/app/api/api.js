@@ -2,7 +2,7 @@
 // - 클라이언트 번들에서 NEXT_PUBLIC_* 환경변수는 "빌드/실행 시점에 주입"됩니다.
 // - 값이 비어있으면 fullUrl이 "undefined/..."가 되어 프론트(3000)로 잘못 요청이 나갈 수 있어
 //   로컬 개발 기본값을 둡니다.
-const DEFAULT_API_URL = 'http://localhost:8080';
+const DEFAULT_API_URL = 'http://localhost:8080/api';
 const API_URL = process.env.NEXT_PUBLIC_FRONT_API_URL || DEFAULT_API_URL;
 
 let refreshInFlight = null;
@@ -11,7 +11,7 @@ async function attemptRefresh() {
     if (refreshInFlight) return refreshInFlight;
 
     refreshInFlight = (async () => {
-        const refreshUrl = `${API_URL}/api/auth/refresh`;
+        const refreshUrl = `${API_URL}/auth/refresh`;
         const res = await fetch(refreshUrl, {
             method: 'POST',
             headers: { Accept: 'text/plain' },
@@ -56,7 +56,7 @@ export async function baseRequest(
         let response = await fetch(fullUrl, fetchOptions);
 
         // 401 Unauthorized 처리
-        const isRefreshEndpoint = fullUrl.includes('/api/auth/refresh');
+        const isRefreshEndpoint = fullUrl.includes('/auth/refresh');
         if (response.status === 401 && credentials && !isRefreshEndpoint) {
             console.warn("토큰 만료 감지, 갱신 시도...");
             try {
