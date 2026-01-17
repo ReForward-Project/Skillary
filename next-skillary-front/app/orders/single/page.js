@@ -55,8 +55,7 @@ export default function SingleOrderPage() {
       );
 
     } catch (e) {
-      if (e.code && e.code === "USER_CANCEL")
-        console.log("사용자가 결제창을 닫음");
+      router.push(`/payments/fail?code=${e.code || 400}&message=${e.message}`);
     }
   };
 

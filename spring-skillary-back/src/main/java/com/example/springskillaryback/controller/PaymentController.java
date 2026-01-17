@@ -3,9 +3,9 @@ package com.example.springskillaryback.controller;
 import com.example.springskillaryback.common.dto.CardRequestDto;
 import com.example.springskillaryback.common.dto.CardResponseDto;
 import com.example.springskillaryback.common.dto.CompleteBillingPaymentRequestDto;
-import com.example.springskillaryback.common.dto.CompleteBillingPaymentResponseDto;
-import com.example.springskillaryback.common.dto.CompleteSinglePaymentRequestDto;
-import com.example.springskillaryback.common.dto.CompleteSinglePaymentResponseDto;
+import com.example.springskillaryback.common.dto.CompleteBillingResponseDto;
+import com.example.springskillaryback.common.dto.CompletePaymentRequestDto;
+import com.example.springskillaryback.common.dto.CompletePaymentResponseDto;
 import com.example.springskillaryback.common.dto.CustomerKeyResponseDto;
 import com.example.springskillaryback.common.dto.OrderResponseDto;
 import com.example.springskillaryback.common.dto.PaymentResponseDto;
@@ -13,7 +13,6 @@ import com.example.springskillaryback.common.dto.PlanOrderRequestDto;
 import com.example.springskillaryback.common.dto.PlanOrderResponseDto;
 import com.example.springskillaryback.common.dto.SingleOrderRequestDto;
 import com.example.springskillaryback.common.dto.SingleOrderResponseDto;
-import com.example.springskillaryback.domain.Content;
 import com.example.springskillaryback.domain.Order;
 import com.example.springskillaryback.domain.Payment;
 import com.example.springskillaryback.service.PaymentService;
@@ -107,21 +106,21 @@ public class PaymentController {
 	}
 
 	@PostMapping("/complete/single")
-	public ResponseEntity<CompleteSinglePaymentResponseDto> completeSinglePayment(
+	public ResponseEntity<CompletePaymentResponseDto> completePayment(
 			@Valid
 			@RequestBody
-			CompleteSinglePaymentRequestDto completeSinglePaymentRequestDto
+			CompletePaymentRequestDto completePaymentRequestDto
 	) {
-		Content content = paymentService.completeSinglePayment(
-				completeSinglePaymentRequestDto.paymentKey(),
-				completeSinglePaymentRequestDto.orderId(),
-				completeSinglePaymentRequestDto.amount());
+		Payment payment = paymentService.completeSinglePayment(
+				completePaymentRequestDto.paymentKey(),
+				completePaymentRequestDto.orderId(),
+				completePaymentRequestDto.amount());
 		return ResponseEntity.status(HttpStatus.CREATED)
-		                     .body(CompleteSinglePaymentResponseDto.from(content));
+		                     .body(CompletePaymentResponseDto.from(payment));
 	}
 
 	@PostMapping("/complete/billing")
-	public ResponseEntity<CompleteBillingPaymentResponseDto> completeBillingPayment(
+	public ResponseEntity<CompleteBillingResponseDto> completeBilling(
 			@Valid
 			@RequestBody
 			CompleteBillingPaymentRequestDto completeBillingPaymentRequestDto
@@ -134,7 +133,7 @@ public class PaymentController {
 				completeBillingPaymentRequestDto.amount());
 
 		return ResponseEntity.status(HttpStatus.CREATED)
-		                     .body(CompleteBillingPaymentResponseDto.from(payment));
+		                     .body(CompleteBillingResponseDto.from(payment));
 	}
 
 	@GetMapping

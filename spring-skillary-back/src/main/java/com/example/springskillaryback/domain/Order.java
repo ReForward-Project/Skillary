@@ -88,6 +88,10 @@ public class Order {
 		status = OrderStatusEnum.EXPIRED;
 	}
 
+	public void fail() {
+		status = OrderStatusEnum.FAILED;
+	}
+
 	public boolean isNotPending() {
 		return this.status != OrderStatusEnum.PENDING;
 	}

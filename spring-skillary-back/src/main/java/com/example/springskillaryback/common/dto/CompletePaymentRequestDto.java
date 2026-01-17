@@ -1,6 +1,6 @@
 package com.example.springskillaryback.common.dto;
 
-public record CompleteSinglePaymentRequestDto(
+public record CompletePaymentRequestDto(
 		String email,
 		String orderId,
 		String paymentKey,

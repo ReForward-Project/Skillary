@@ -52,5 +52,6 @@ export default async function baseRequest(
     } catch (e) {
         console.log(`[API Error] ${fullUrl}:`, e.message);
         console.log(e);
+        throw new Error(e.message);
     }
 }

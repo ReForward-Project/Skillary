@@ -1,47 +1,59 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { completeSinglePay } from '@/api/payments';
+import { completeSinglePay, completeBillingPay } from '@/api/payments';
 
 export default function Success() {
-    const searchParams = useSearchParams();
+const searchParams = useSearchParams();
     const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
+    const [paymentResult, setPaymentResult] = useState(null);
+    const called = useRef(false);
 
-    // 쿼리 파라미터에서 값 추출
     const orderId = searchParams.get('orderId');
     const paymentKey = searchParams.get('paymentKey');
     const amount = searchParams.get('amount');
     const price = searchParams.get('price');
 
-
     useEffect(() => {
+        // 1. 빌링 페이: 이미 결제가 완료되어 price가 넘어온 경우
+        if (price) {
+            setPaymentResult({
+                paymentKey: paymentKey,
+                orderId: orderId,
+                amount: price // 화면 하단에 보여줄 금액
+            });
+            return; // API 호출 없이 종료
+        }
+
+        // 2. 싱글 페이: 아직 승인 전이라 백엔드 호출이 필요한 경우
         const confirm = async () => {
-            if (orderId && paymentKey && amount) {
-                try {
-                    await completeSinglePay(orderId, paymentKey, parseInt(amount));
-                } catch (error) {
-                    router.push('/payments/fail');
-                } finally {
-                    setIsLoading(false);
-                }
-            }
-            if (paymentKey && orderId && price) {
-                setIsLoading(false);
+            if (called.current) return;
+            called.current = true;
+
+            try {
+                const result = await completeSinglePay(orderId, paymentKey, amount);
+                console.log('result: ', result);
+                setPaymentResult(result);
+            } catch (e) {
+                router.push(`/payments/fail?message=${encodeURIComponent(e.message || '싱글 페이 승인 실패')}`);
             }
         };
-        confirm();
-    }, [orderId, paymentKey, amount]);
 
-    if (isLoading) {
+        if (orderId && paymentKey) {
+            confirm();
+        }
+    }, [orderId, paymentKey, amount, price, router]);
+
+    // 로딩 화면 (paymentResult가 채워지기 전까지 노출)
+    if (!paymentResult) {
         return (
             <div className="flex flex-col items-center justify-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                <p className="mt-4 text-gray-600">결제 중입니다. 잠시만 기다려주세요.</p>
+                <p className="mt-4 text-gray-600">결제 정보를 확인 중입니다...</p>
             </div>
         );
-    }    
+    }
 
     return (
         <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
@@ -60,11 +72,11 @@ export default function Success() {
                 <div className="space-y-4 text-left border-t border-b py-6 mb-8">
                     <div className="flex justify-between">
                         <span className="text-gray-500">결제 금액</span>
-                        <span className="font-semibold">{amount || price} 원</span>
+                        <span className="font-semibold">{paymentResult.price || paymentResult.amount} 원</span>
                     </div>
                     <div className="flex justify-between">
                         <span className="text-gray-500">주문 정보</span>
-                        <span className="text-sm font-mono text-gray-800">{orderId}</span>
+                        <span className="text-sm font-mono text-gray-800">{paymentResult.paymentKey}</span>
                     </div>
                 </div>
 

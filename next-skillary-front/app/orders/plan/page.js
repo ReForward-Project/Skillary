@@ -47,8 +47,12 @@ export default function BillingOrderPage() {
         orderResponse.planName,
         orderResponse.price
       );
-      console.log('result', result);
-      setOrderResponse(null);
+      console.log();
+      console.log('result.paymentKey', result.paymentKey);
+      console.log('result.orderId', result.orderId);
+      console.log('result.amount', result.amount);
+      console.log();
+      // setOrderResponse(null);
       const paymentKey = result.paymentKey;
       const orderId = result.orderId;
       const price = result.amount;

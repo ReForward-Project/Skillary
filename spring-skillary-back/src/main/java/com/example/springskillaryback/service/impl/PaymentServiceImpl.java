@@ -148,13 +148,22 @@ public class PaymentServiceImpl implements PaymentService {
 				credit
 		);
 
+		String paymentKey = tossResponse.path("paymentKey").asString();
+		int amount = tossResponse.path("totalAmount").asInt();
+		var creditMethod = CreditMethodEnum.fromMethod(tossResponse.path("method").asString());
+
+		if (paymentRepository.existsByPaymentKey(paymentKey)) {
+			order.fail();
+			throw new IllegalArgumentException("구독을 해지한 이후에 구독을 해주세요");
+		}
+
 		Payment payment = Payment.builder()
 		                         .user(order.getUser())
-		                         .paymentKey(tossResponse.path("paymentKey").asString())
+		                         .paymentKey(paymentKey)
 		                         .order(order)
 		                         .creditStatus(CreditStatusEnum.PAID)
-		                         .credit(tossResponse.path("totalAmount").asInt())
-		                         .creditMethod(CreditMethodEnum.fromMethod(tossResponse.path("method").asString()))
+		                         .credit(amount)
+		                         .creditMethod(creditMethod)
 		                         .paidAt(LocalDateTime.now())
 		                         .build();
 
@@ -165,7 +174,7 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Override
-	public Content completeSinglePayment(
+	public Payment completeSinglePayment(
 			String paymentKey,
 			String orderId,
 			int credit
@@ -174,8 +183,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 		if (!order.verifyWith(credit))
 			throw new RuntimeException("주문 정보가 왜곡됐습니다.");
-
-		if (order.getCreatedAt().plusMinutes(10).isAfter(LocalDateTime.now()))
+		if (order.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now()))
 			throw new IllegalArgumentException("이미 만료된 주문입니다.");
 		if (order.isPaid())
 			throw new IllegalArgumentException("이미 처리된 주문입니다.");
@@ -183,26 +191,36 @@ public class PaymentServiceImpl implements PaymentService {
 			throw new IllegalArgumentException("해당 주문은 처리될 수 없습니다.");
 
 		var tossResponse = tossPaymentsClient.confirm(
-				order.getUser().getIdempotencyKey().toString(),
+				order.getUser()
+				     .getIdempotencyKey()
+				     .toString(),
 				paymentKey,
 				orderId,
 				credit
 		);
 
+		paymentKey = tossResponse.path("paymentKey").asString();
+		int totalAmount = tossResponse.path("totalAmount").asInt();
+		CreditMethodEnum creditMethod = CreditMethodEnum.fromMethod(tossResponse.path("method").asString());
+
+		if (paymentRepository.existsByPaymentKey(paymentKey)) {
+			order.fail();
+			throw new IllegalArgumentException("동일한 상품은 재주문 할 수 있는 기간 이후에 주문해주세요.");
+		}
+
 		Payment payment = Payment.builder()
 		                         .user(order.getUser())
-		                         .paymentKey(tossResponse.path("paymentKey").asString())
+		                         .paymentKey(paymentKey)
 		                         .order(order)
 		                         .creditStatus(CreditStatusEnum.PAID)
-		                         .credit(tossResponse.path("totalAmount").asInt())
-		                         .creditMethod(CreditMethodEnum.fromMethod(tossResponse.path("method").asString()))
+		                         .credit(totalAmount)
+		                         .creditMethod(creditMethod)
 		                         .paidAt(LocalDateTime.now())
 		                         .build();
-
 		paymentRepository.save(payment);
 		order.complete();
 
-		return order.getContent();
+		return payment;
 	}
 
 	@Override
@@ -283,9 +301,8 @@ public class PaymentServiceImpl implements PaymentService {
 	}
 
 	@Transactional
-	@Scheduled(fixedDelay = 60000) // 1분마다 실행
+	@Scheduled(fixedDelay = 60000)
 	public void expireOrders() {
-		// PENDING 상태이면서 생성 시간이 10분 전인 주문들을 찾아서 EXPIRED로 변경
 		List<Order> expiredOrders = orderRepository.findAllByStatus(OrderStatusEnum.PENDING);
 		expiredOrders.stream()
 		             .filter(order -> order.getExpiredAt().isBefore(LocalDateTime.now()))

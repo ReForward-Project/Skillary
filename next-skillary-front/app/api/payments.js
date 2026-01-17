@@ -96,20 +96,6 @@ export async function confirmBillingPay(
   planName,
   amount
 ) {
-  return !!(await baseRequest(
-    'POST',
-    {},
-    `/payments/complete/billing`,
-    JSON.stringify({
-      customerKey: customerKey,
-      email: 'email@email.com',
-      orderId: orderId,
-      planName: planName,
-      amount: amount
-    }),
-    '플랜 결제 실패',
-    true
-  ));
   const response = await baseRequest(
     'POST',
     {},
@@ -146,7 +132,7 @@ export async function confirmSinglePay(
   try {
     const payment = tossPayments.payment({ customerKey });
 
-    return await payment.requestPayment({
+    await payment.requestPayment({
       method: "CARD",
       amount: {
         currency: "KRW",
@@ -154,8 +140,8 @@ export async function confirmSinglePay(
       },
       orderId: orderId,
       orderName: orderName,
-      successUrl: window.location.origin + "/payments/success",
-      failUrl: window.location.origin + "/payments/fail",
+      successUrl: window.location.origin + `/payments/success`,
+      failUrl: window.location.origin + `/payments/fail`,
       card: {
         useEscrow: false,
         flowMode: "DEFAULT",
@@ -165,6 +151,7 @@ export async function confirmSinglePay(
     });
   } catch (e) {
     alert(error.message || "결제 확인 중 오류가 발생했습니다.");
+    throw new Error(e);
   }
 }
 
