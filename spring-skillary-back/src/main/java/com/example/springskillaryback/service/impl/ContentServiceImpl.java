@@ -181,8 +181,15 @@ public class ContentServiceImpl implements ContentService {
 	/** 카테고리 기준 목록 조회 */
 	@Override
 	@Transactional(readOnly = true)
-	public Slice<ContentListResponseDto> getContentsByCategory(CategoryEnum category, int page, int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+	public Slice<ContentListResponseDto> getContentsByCategory(CategoryEnum category, int page, int size, String sort) {
+		Pageable pageable;
+		if ("popular".equals(sort)) {
+			// popular : 인기순 (like)
+			pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "likeCount", "createdAt"));
+		} else {
+			// latest : 최신순 (createdAt)
+			pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+		}
 		Slice<Content> contents = contentRepository.findByCategoryForList(category, pageable);
 		return contents.map(this::toListDto);
 	}

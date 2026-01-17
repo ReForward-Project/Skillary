@@ -26,7 +26,7 @@ public interface ContentRepository extends JpaRepository<Content, Byte> {
 
 	/** 카테고리 기준 목록 */
 	@EntityGraph(attributePaths = {"creator", "plan"})
-	@Query("SELECT c FROM Content c WHERE c.category = :category ORDER BY c.createdAt DESC")
+	@Query("SELECT c FROM Content c WHERE c.category = :category")
 	Slice<Content> findByCategoryForList(CategoryEnum category, Pageable pageable);
 
 	/** 라이크 수 기준 목록 */

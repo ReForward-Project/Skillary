@@ -99,9 +99,10 @@ public class ContentController {
 	public ResponseEntity<Slice<ContentListResponseDto>> getContentsByCategory(
 		@PathVariable CategoryEnum category,
 		@RequestParam(defaultValue = "0") int page,
-		@RequestParam(defaultValue = "10") int size
+		@RequestParam(defaultValue = "10") int size,
+		@RequestParam(defaultValue = "latest") String sort
 	) {
-		Slice<ContentListResponseDto> contents = contentService.getContentsByCategory(category, page, size);
+		Slice<ContentListResponseDto> contents = contentService.getContentsByCategory(category, page, size, sort);
 		return ResponseEntity.ok(contents); // 200
 	}
 

@@ -23,7 +23,7 @@ public interface ContentService {
 	Slice<ContentListResponseDto> getContentsByCreator(Byte creatorId, int page, int size);
 	
 	/** 카테고리 기준 목록 조회 */
-	Slice<ContentListResponseDto> getContentsByCategory(CategoryEnum category, int page, int size);
+	Slice<ContentListResponseDto> getContentsByCategory(CategoryEnum category, int page, int size, String sort);
 	
 	/** 콘텐츠 상세 조회 (포스트, 댓글 포함) */
 	ContentResponseDto getContent(Byte contentId, Byte userId);
