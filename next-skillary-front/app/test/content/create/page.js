@@ -480,31 +480,33 @@ export default function ContentCreateTestPage() {
                 </select>
               </div>
 
-              {/* 컨텐츠 유형 */}
+              {/* 콘텐츠 유형 */}
               <div>
                 <label className="block text-sm mb-1">
-                  컨텐츠 유형 <span className="text-red-500">*</span>
+                  콘텐츠 유형 <span className="text-red-500">*</span>
                 </label>
                 <div className="flex gap-4">
-                  <label className="flex items-center gap-1 cursor-pointer">
+                  <label className={`flex items-center gap-1 ${isEditMode ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                     <input
                       type="radio"
                       name="type"
                       value="free"
                       checked={formData.type === 'free'}
                       onChange={handleInputChange}
-                      className="w-4 h-4"
+                      disabled={isEditMode}
+                      className="w-4 h-4 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm">무료</span>
                   </label>
-                  <label className="flex items-center gap-1 cursor-pointer">
+                  <label className={`flex items-center gap-1 ${isEditMode ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                     <input
                       type="radio"
                       name="type"
                       value="paid"
                       checked={formData.type === 'paid'}
                       onChange={handleInputChange}
-                      className="w-4 h-4"
+                      disabled={isEditMode}
+                      className="w-4 h-4 disabled:cursor-not-allowed"
                     />
                     <span className="text-sm">유료</span>
                   </label>
@@ -518,25 +520,27 @@ export default function ContentCreateTestPage() {
                     결제 유형 <span className="text-red-500">*</span>
                   </label>
                   <div className="flex gap-4">
-                    <label className="flex items-center gap-1 cursor-pointer">
+                    <label className={`flex items-center gap-1 ${isEditMode ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                       <input
                         type="radio"
                         name="paymentType"
                         value="subscription"
                         checked={formData.paymentType === 'subscription'}
                         onChange={handleInputChange}
-                        className="w-4 h-4"
+                        disabled={isEditMode}
+                        className="w-4 h-4 disabled:cursor-not-allowed"
                       />
                       <span className="text-sm">구독</span>
                     </label>
-                    <label className="flex items-center gap-1 cursor-pointer">
+                    <label className={`flex items-center gap-1 ${isEditMode ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}>
                       <input
                         type="radio"
                         name="paymentType"
                         value="one-time"
                         checked={formData.paymentType === 'one-time'}
                         onChange={handleInputChange}
-                        className="w-4 h-4"
+                        disabled={isEditMode}
+                        className="w-4 h-4 disabled:cursor-not-allowed"
                       />
                       <span className="text-sm">단건</span>
                     </label>
@@ -557,8 +561,9 @@ export default function ContentCreateTestPage() {
                     value={formData.selectedPlanId}
                     onChange={handleInputChange}
                     required
+                    disabled={isEditMode}
                     placeholder="플랜 ID"
-                    className="w-full px-2 py-1 border border-gray-300"
+                    className="w-full px-2 py-1 border border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </div>
               )}
@@ -576,8 +581,9 @@ export default function ContentCreateTestPage() {
                     value={formData.price}
                     onChange={handleInputChange}
                     required
+                    disabled={isEditMode}
                     placeholder="가격"
-                    className="w-full px-2 py-1 border border-gray-300"
+                    className="w-full px-2 py-1 border border-gray-300 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   />
                 </div>
               )}
