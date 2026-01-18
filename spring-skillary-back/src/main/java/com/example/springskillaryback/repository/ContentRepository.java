@@ -16,6 +16,9 @@ import java.util.Optional;
 public interface ContentRepository extends JpaRepository<Content, Byte> {
 	Optional<Content> findByTitle(String title);
 
+    /** 크리에이터 콘텐츠 수 */
+	long countByCreator_CreatorId(Byte creatorId);
+
 	/** 콘텐츠 전체 목록 */
 	@EntityGraph(attributePaths = {"creator", "plan"})
 	@Query("SELECT c FROM Content c ORDER BY c.createdAt DESC")

@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -18,10 +19,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Table(name = "creators")
 @Entity
@@ -35,14 +32,19 @@ public class Creator {
 	private Byte creatorId;
 
 	@Column(length = 100, nullable = false, unique = true)
+	@Setter
 	private String displayName;
 
+    @Setter
     private String introduction;
 
+	@Setter
 	private String profile; // url (사진)
 
+    @Setter
     private String bankName;
 
+    @Setter
     private String accountNumber;
 
     @Builder.Default
@@ -74,4 +76,5 @@ public class Creator {
     @Builder.Default
 	@OneToMany(mappedBy = "creator") // [임시] 로컬 작업중 매핑오류 임시 수정
 	List<Content> contents = new ArrayList<>();
+
 }
