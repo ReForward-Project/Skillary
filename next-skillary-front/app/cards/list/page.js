@@ -1,12 +1,16 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { pagingCard, getCustomerKey, withdrawCard } from '@/api/payments';
 import { registerCard } from '@/api/tossPayments';
+import CardFooter from '../components/CardFooter';
+import CardList from '../components/CardList';
+import CardHeader from '../components/CardHeader';
+import Loading from '@/components/Loading';
+
 
 export default function CardListPage() {
-  const [cards, setCards] = useState([]); // 실제 데이터 배열
+  const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchCards = async () => {
@@ -50,80 +54,24 @@ export default function CardListPage() {
     }
   };
 
-  if (loading) return <div className="p-10 text-center">로딩 중...</div>;
+  if (loading) return <Loading loadingMessage='카드 목록 로딩중입니다...'/>
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 py-12">
         
         {/* 헤더 섹션 */}
-        <div className="mb-8">
-          <Link
-            href="/auth/my-page"
-            className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-black transition mb-4"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-            마이페이지로 돌아가기
-          </Link>
-          <div className="flex justify-between items-end">
-            <div>
-              <h1 className="text-2xl font-bold text-black tracking-tight">결제 수단 관리</h1>
-              <p className="text-gray-500 mt-1">구독 서비스에 사용할 카드를 등록하세요.</p>
-            </div>
-          </div>
-        </div>
+        <CardHeader/>
 
         {/* 카드 리스트 / 등록 버튼 */}
         <div className="space-y-4">
           {cards.length > 0 ? (
             <>
-              {cards.map((card, idx) => (
-                <div 
-                  key={idx}
-                  className={`relative overflow-hidden bg-white border-2 rounded-2xl p-6 transition-all ${
-                    card.isDefault ? 'border-black shadow-md' : 'border-gray-100'
-                  }`}
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex gap-4">
-                      <div className="w-12 h-8 bg-gray-800 rounded flex items-center justify-center text-[10px] text-white font-bold uppercase">
-                        {card.cardName}
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-bold text-lg">{card.cardNumber}</span>
-                          {card.isDefault && (
-                            <span className="bg-black text-white text-[10px] px-2 py-0.5 rounded-full font-bold">DEFAULT</span>
-                          )}
-                        </div>
-                        <p className="text-sm text-gray-400 mt-1">등록일: {card.createdAt}</p>
-                      </div>
-                    </div>
-                      <button 
-                        onClick={(e) => {
-                          e.stopPropagation(); // 카드 전체 클릭 이벤트로 번지는 것 방지
-                          handleWithdrawCard(card.cardId);
-                        }}
-                        className="text-gray-400 hover:text-red-500 transition"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path 
-                            strokeLinecap="round" 
-                            strokeLinejoin="round" 
-                            strokeWidth={2} 
-                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" 
-                          />
-                        </svg>
-                      </button>
-                  </div>
-                </div>
-              ))}
+              <CardList cards={cards} withdrawCard={handleWithdrawCard}/>
               
               {/* 추가 등록 버튼 (목록이 있을 때 소형 버튼) */}
               <button 
-                onClick={handleAddCard}
+                onClick={handleRegisterCard}
                 className="w-full py-4 border-2 border-dashed border-gray-200 rounded-2xl text-gray-500 font-medium hover:border-gray-400 hover:text-gray-700 transition flex items-center justify-center gap-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,38 +80,13 @@ export default function CardListPage() {
                 새 카드 등록하기
               </button>
             </>
-          ) : (
-            /* 빈 상태 (Empty State) */
-            <button 
-              onClick={handleRegisterCard}
-              className="w-full bg-white border-2 border-dashed border-gray-200 rounded-3xl p-16 text-center hover:border-black hover:bg-gray-50 transition-all group"
-            >
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-gray-50 rounded-full mb-4 group-hover:scale-110 transition-transform">
-                <span className="text-3xl">💳</span>
-              </div>
-              <h3 className="text-xl font-bold text-black mb-2">등록된 결제 수단이 없습니다</h3>
-              <p className="text-gray-500 mb-8">안전한 결제를 위해 카드를 먼저 등록해 주세요.</p>
-              <span className="inline-flex items-center px-8 py-3 bg-black text-white rounded-full font-bold shadow-lg hover:bg-gray-800 transition">
-                카드 등록 시작하기
-              </span>
-            </button>
-          )}
+          ) :
+          /* 빈 상태 (Empty State) */
+          <CardAddButton handleRegisterCard={handleRegisterCard}/>}
         </div>
 
         {/* 하단 안내문 */}
-        <div className="mt-12 border-t border-gray-200 pt-8">
-          <h4 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            꼭 확인해 주세요!
-          </h4>
-          <ul className="text-xs text-gray-500 space-y-2 leading-relaxed">
-            <li>• 본인 명의의 신용/체크카드만 등록이 가능합니다.</li>
-            <li>• 등록된 기본 결제 수단은 정기 구독 갱신 시 자동으로 사용됩니다.</li>
-            <li>• 카드 정보는 토스페이먼츠를 통해 안전하게 암호화되어 관리됩니다.</li>
-          </ul>
-        </div>
+        <CardFooter/>
 
       </div>
     </div>

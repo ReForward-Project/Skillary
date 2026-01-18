@@ -3,10 +3,11 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { pagingPayments } from '@/api/payments';
+import PaymentStatusBadge from '../components/PaymentStatusBadge';
+import Loading from '@/components/Loading';
 
 export default function PaymentsListPage() {
-
-  const [payments, setPayments] = useState([]); // 실제 데이터 배열
+  const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,7 +15,6 @@ export default function PaymentsListPage() {
     const fetchPayments = async () => {
       try {
         const response = await pagingPayments(0, 10);
-        // Spring Page 객체 구조에서는 response.content 안에 데이터 배열이 들어있습니다.
         setPayments(response.content || []); 
       } catch (error) {
         console.error("결제 내역 로딩 실패:", error);
@@ -26,7 +26,7 @@ export default function PaymentsListPage() {
     fetchPayments();
   }, []);
 
-  if (loading) return <div className="p-10 text-center">로딩 중...</div>;
+  if (loading) return <Loading loadingMessage='결제 정보 목록 로딩중입니다...'/>;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -75,33 +75,7 @@ export default function PaymentsListPage() {
                       </div>
 
                       {/* 상태 뱃지 */}
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold tracking-tight border shadow-sm transition-colors ${
-                          payment.creditStatus === 'PAID'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : payment.creditStatus === 'READY'
-                            ? 'bg-blue-50 text-blue-700 border-blue-200'
-                            : payment.creditStatus === 'CANCELED'
-                            ? 'bg-slate-100 text-slate-600 border-slate-300'
-                            : payment.creditStatus === 'REFUNDED'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
-                            : 'bg-gray-50 text-gray-500 border-gray-200'
-                        }`}
-                      >
-                        <span className="flex items-center gap-1.5">
-                          <span className={`w-1.5 h-1.5 rounded-full ${
-                            payment.creditStatus === 'PAID' ? 'bg-emerald-500' :
-                            payment.creditStatus === 'READY' ? 'bg-blue-500' :
-                            payment.creditStatus === 'CANCELED' ? 'bg-slate-400' :
-                            'bg-amber-500'
-                          }`} />
-                          
-                          {payment.creditStatus === 'PAID' && '지불 완료'}
-                          {payment.creditStatus === 'READY' && '결제 대기'}
-                          {payment.creditStatus === 'CANCELED' && '철회됨'}
-                          {payment.creditStatus === 'REFUNDED' && '환불 완료'}
-                        </span>
-                      </span>
+                      <PaymentStatusBadge status={payment.creditStatus}/>
                     </div>
                   </div>
                 </div>

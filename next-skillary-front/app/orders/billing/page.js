@@ -14,6 +14,7 @@ import OrderDescriptionSection from '../components/OrderDescriptionSection';
 import OrderPayExecution from '../components/OrderPayExecution';
 import OrderLayout from '../components/OrderLayout';
 
+
 export default function BillingOrderPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -30,8 +31,7 @@ export default function BillingOrderPage() {
     }
   )
 
-  if (isLoading)
-    return <Loading loadingMessage='주문 정보를 로딩중입니다...'/>
+  if (isLoading) return <Loading loadingMessage='주문 정보를 로딩중입니다...'/>
 
   // 구독 플랜 또는 콘텐츠가 없으면 에러 표시
   if (!orderResponse) {
@@ -66,7 +66,9 @@ export default function BillingOrderPage() {
   return (
   <>
     <OrderLayout
-      orderHeader={ <OrderHeader /> }
+      orderHeader={
+        <OrderHeader />
+      }
       orderSummary={
         <OrderSummary
           title='구독 콘텐츠'

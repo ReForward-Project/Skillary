@@ -3,7 +3,8 @@
 import useSWR from 'swr';
 import { useSearchParams } from 'next/navigation';
 
-import { singleOrder, confirmSinglePay, restartOrder } from '@/api/payments';
+import { singleOrder, restartOrder } from '@/api/payments';
+import { confirmSinglePay } from '@/api/tossPayments';
 import Loading from '@/components/Loading';
 import CardFailPage from '@/components/CardFailPage';
 
@@ -13,6 +14,7 @@ import OrderFooter from '../components/OrderFooter';
 import OrderDescriptionSection from '../components/OrderDescriptionSection';
 import OrderPayExecution from '../components/OrderPayExecution';
 import OrderLayout from '../components/OrderLayout';
+
 
 export default function SingleOrderPage() {
   const searchParams = useSearchParams();
