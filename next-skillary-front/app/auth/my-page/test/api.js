@@ -17,7 +17,7 @@ export async function uploadProfileImage(file) {
   const formData = new FormData();
   formData.append('file', file);
 
-  const res = await fetch(`${API_URL}/api/files/image`, {
+  const res = await fetch(`${API_URL}/files/image`, {
     method: 'POST',
     body: formData,
     credentials: 'include',
@@ -34,7 +34,7 @@ export async function apiGetMe() {
   return await baseRequest(
     'GET',
     {},
-    '/api/users/me',
+    '/users/me',
     null,
     '유저 정보를 불러오지 못했습니다.',
     true,
@@ -45,7 +45,7 @@ export async function apiGetMyCreator() {
   return await baseRequest(
     'GET',
     {},
-    '/api/creators/me',
+    '/creators/me',
     null,
     '크리에이터 정보를 불러오지 못했습니다.',
     true,
@@ -56,7 +56,7 @@ export async function apiCreateCreator(payload) {
   await baseRequest(
     'POST',
     TEXT_HEADERS, // 201 + body 없음 → json 파싱 방지
-    '/api/creators',
+    '/creators',
     JSON.stringify(payload),
     '크리에이터 생성에 실패했습니다.',
     true,
@@ -67,7 +67,7 @@ export async function apiUpdateUserMe(payload) {
   await baseRequest(
     'PUT',
     {},
-    '/api/users/me',
+    '/users/me',
     JSON.stringify(payload),
     '유저 정보 수정에 실패했습니다.',
     true,
@@ -78,7 +78,7 @@ export async function apiUpdateCreatorMe(payload) {
   await baseRequest(
     'PUT',
     {},
-    '/api/creators/me',
+    '/creators/me',
     JSON.stringify(payload),
     '프로필 수정(유저+크리에이터)에 실패했습니다.',
     true,
