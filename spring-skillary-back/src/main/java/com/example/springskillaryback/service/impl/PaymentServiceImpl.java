@@ -132,6 +132,12 @@ public class PaymentServiceImpl implements PaymentService {
 		User user = findUserOrElseThrow(email);
 		SubscriptionPlan plan = order.getSubscriptionPlan();
 
+		System.out.println();
+		System.out.println(order.getOrderId());
+		System.out.println(user.getUserId());
+		System.out.println(plan.getPlanId());
+		System.out.println();
+
 		if (plan == null || plan.getPrice() != credit || !user.getCustomerKey().toString().equals(customerKey)
 		    || !order.getUser().equals(user) || order.isPaid())
 			throw new IllegalArgumentException("잘못된 주문 정보입니다.");

@@ -1,6 +1,7 @@
 import './globals.css'
 import Script from 'next/script';
 import Header from './components/Header'
+import { SWRConfig } from 'swr';
 
 export const metadata = {
   title: 'Skillary',
@@ -8,11 +9,16 @@ export const metadata = {
 }
 
 export default function RootLayout({ children }) {
-  const clientKey = 'test_ck_yL0qZ4G1VO11Mw99NZLv8oWb2MQY'; 
-
   return (
     <html lang="ko">
       <body>
+        <SWRConfig 
+          value={{
+            revalidateOnFocus: false,
+            shouldRetryOnError: false,
+            dedupingInterval: 2000,
+          }}
+        ></SWRConfig>
         <Header />
         {children}
         <Script 

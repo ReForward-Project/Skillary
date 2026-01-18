@@ -1,5 +1,5 @@
-import PopularCard from '../components/PopularCard';
-import { popularContents } from '../components/popularContentsData';
+import PopularCard from '@/components/PopularCard';
+import { popularContents } from '@/components/popularContentsData';
 
 export default function ContentsPage() {
   // 임시로 더 많은 데이터를 보여주기 위해 데이터 복제

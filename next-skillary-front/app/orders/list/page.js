@@ -36,9 +36,9 @@ export default function OrdersListPage() {
   const handleRestartOrder = async (orderId) => {
     const res = await restartOrder(orderId);
     if (res.planName)
-      router.push(`/orders/plan?orderId=${orderId}`);
+      router.push(`/orders/billing?orderId=${orderId}`);
     else 
-      router.push(`/orders/single?orderId=${orderId}`)
+      router.push(`/orders/payment?orderId=${orderId}`)
   }
 
   useEffect(() => {

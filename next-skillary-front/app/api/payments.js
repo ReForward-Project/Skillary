@@ -90,12 +90,12 @@ export async function pagingCard(page = 0, size = 10) {
 }
 
 
-export async function confirmBillingPay(
+export async function confirmBillingPay({
   customerKey,
   orderId,
   planName,
   amount
-) {
+}) {
   const response = await baseRequest(
     'POST',
     {},
@@ -111,6 +111,7 @@ export async function confirmBillingPay(
     true
   );
   if (response === undefined || !response) {
+    console.log('2-1');
     return null;
   }
 

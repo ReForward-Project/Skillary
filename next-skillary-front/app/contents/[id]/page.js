@@ -16,17 +16,8 @@ export default function ContentDetailPage({ params }) {
   const [currentUser] = useState('테크 인사이트'); // 임시 사용자
   const isOwner = content && content.author === currentUser;
 
-
   // 크리에이터 정보 찾기
   const creator = creators.find(c => c.name === content?.author);
-
-  const singleOrderHandler = async () => {
-    router.push(`/orders/single?contentId=${1}`); // test
-  }
-
-  const billingOrderHandler = async () => {
-    router.push(`/orders/plan?planId=${1}`); //test
-  }
 
   if (!content) {
     return (
@@ -102,7 +93,7 @@ export default function ContentDetailPage({ params }) {
         <div className="flex gap-4">
           {isOwner && (
             <button
-              onClick={() => handleEdit()}
+              onClick={handleEdit}
               className="px-6 py-3 border-2 border-black text-black rounded-lg font-semibold hover:bg-gray-50 transition"
             >
               수정하기
@@ -110,7 +101,7 @@ export default function ContentDetailPage({ params }) {
           )}
           {content.badgeType === 'price' && (
             <button 
-              onClick={singleOrderHandler}
+              onClick={() => router.push(`/orders/payment?contentId=1`)}
               className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
             >
               구매하기 {content.price}
@@ -118,8 +109,7 @@ export default function ContentDetailPage({ params }) {
           )}
           {content.badgeType === 'badge' && content.badge === '구독자 전용' && (
             <button 
-              // href={`/orders?contentId=${content.id}`}
-              onClick={billingOrderHandler}
+              onClick={() => router.push(`/orders/billing?planId=1`)}
               className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition text-center block"
             >
               구독하기

@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { completeSinglePay, completeBillingPay } from '@/api/payments';
+import Loading from '@/components/Loading';
 
 export default function Success() {
 const searchParams = useSearchParams();
@@ -46,14 +47,8 @@ const searchParams = useSearchParams();
     }, [orderId, paymentKey, amount, price, router]);
 
     // 로딩 화면 (paymentResult가 채워지기 전까지 노출)
-    if (!paymentResult) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-screen">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                <p className="mt-4 text-gray-600">결제 정보를 확인 중입니다...</p>
-            </div>
-        );
-    }
+    if (!paymentResult)
+        return <Loading loadingMessage = '결제 정보를 확인 중입니다...'/>
 
     return (
         <main className="flex min-h-screen flex-col items-center justify-center bg-gray-50 p-4">
