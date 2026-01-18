@@ -1,3 +1,4 @@
+
 // NOTE:
 // - 클라이언트 번들에서 NEXT_PUBLIC_* 환경변수는 "빌드/실행 시점에 주입"됩니다.
 // - 값이 비어있으면 fullUrl이 "undefined/..."가 되어 프론트(3000)로 잘못 요청이 나갈 수 있어
@@ -35,9 +36,8 @@ export async function baseRequest(
     body = null,
     errMsg = '🛠️ 요청 처리 중 오류가 발생했습니다.',
     credentials = false,
-) {
-    // URL이 '/'로 시작하면 API_URL과 결합
-    const fullUrl = url.startsWith('http') ? url : `${API_URL}${url}`;
+) {     
+    const fullUrl = `${API_URL}${url}`;
 
     try {
         const fetchOptions = {
@@ -53,6 +53,8 @@ export async function baseRequest(
             fetchOptions.body = body;
         }
 
+        console.log(fullUrl);
+        console.log(fetchOptions);
         let response = await fetch(fullUrl, fetchOptions);
 
         // 401 Unauthorized 처리
@@ -76,16 +78,14 @@ export async function baseRequest(
             throw new Error(specificMsg);
         }
 
-        if (response.status === 204)
-            return null;
-        if (fetchOptions.headers['Accept']?.startsWith('text/'))
-            return response;
-        else
-            return await response.json();
+        if (response.status === 204) return null;
+        if (fetchOptions.headers['Accept']?.startsWith('text/')) return response;
+        else return await response.json();
         
     } catch (e) {
-        console.error(`[API Error] ${fullUrl}:`, e.message);
-        throw e; 
+        console.log(`[API Error] ${fullUrl}:`, e.message);
+        console.log(e);
+        throw new Error(e.message);
     }
 }
 

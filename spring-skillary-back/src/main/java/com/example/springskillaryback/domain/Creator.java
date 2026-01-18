@@ -65,12 +65,10 @@ public class Creator {
 
     @Builder.Default
 	@OneToMany(orphanRemoval = true)
-	@JoinColumn(name = "creator_id")
 	Set<SubscriptionPlan> plans = new HashSet<>();
 
     @Builder.Default
 	@OneToMany(orphanRemoval = true)
-	@JoinColumn(name = "creator_id")
 	List<CreatorSettlement> settlements = new ArrayList<>();
 
     @Builder.Default

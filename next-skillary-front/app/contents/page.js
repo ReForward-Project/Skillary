@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import PopularCard from '../components/PopularCard';
+import PopularCard from '@/components/PopularCard';
+import { popularContents } from '@/components/popularContentsData';
 import { getContents, getCategories, getContentsByCategory, getPopularContents } from '../api/contents';
 import { formatDate } from '../utils/formatUtils';
 

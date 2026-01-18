@@ -10,6 +10,7 @@ import ContentHead from './components/ContentHead';
 import ContentBody from './components/ContentBody';
 import CommentSection from './components/CommentSection';
 
+
 export default function ContentDetailPage({ params }) {
   const { id } = use(params);
   const router = useRouter();
@@ -187,40 +188,37 @@ export default function ContentDetailPage({ params }) {
             canViewContent={canViewContent}
           />
 
-          {/* 액션 버튼 */}
-          <div className="flex gap-4 mb-8">
-            {/* 본인 소유인 경우에만 수정/삭제 버튼 표시 */}
-            {isOwner && (
-              <>
-                <button
-                  onClick={handleEdit}
-                  className="px-6 py-3 border-2 border-black text-black rounded-lg font-semibold hover:bg-gray-50 transition"
-                >
-                  수정하기
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="px-6 py-3 border-2 border-red-500 text-red-500 rounded-lg font-semibold hover:bg-red-50 transition"
-                >
-                  삭제하기
-                </button>
-              </>
-            )}
-            {!isOwner && badgeInfo.type === 'price' && (
-              <button className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition">
-                구매하기 ({badgeInfo.text})
-              </button>
-            )}
-            {!isOwner && badgeInfo.type === 'badge' && badgeInfo.text === '구독자 전용' && (
-              <Link 
-                href={`/orders?contentId=${id}`}
-                className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition text-center block"
-              >
-                구독하기
-              </Link>
-            )}
-          </div>
-
+        {/* 액션 버튼 */}
+        <div className="flex gap-4">
+          {isOwner && (
+            <button
+              onClick={handleEdit}
+              className="px-6 py-3 border-2 border-black text-black rounded-lg font-semibold hover:bg-gray-50 transition"
+            >
+              수정하기
+            </button>
+          )}
+          {content.badgeType === 'price' && (
+            <button 
+              onClick={() => router.push(`/orders/payment?contentId=1`)}
+              className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
+            >
+              구매하기 {content.price}
+            </button>
+          )}
+          {content.badgeType === 'badge' && content.badge === '구독자 전용' && (
+            <button 
+              onClick={() => router.push(`/orders/billing?planId=1`)}
+              className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition text-center block"
+            >
+              구독하기
+            </button>
+          )}
+          {content.badge === '무료' && (
+            <button className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition">
+              콘텐츠 보기
+            </button>
+          )}
           {/* 댓글 섹션 */}
           <CommentSection
             contentId={id}
