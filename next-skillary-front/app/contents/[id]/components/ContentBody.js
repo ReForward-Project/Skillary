@@ -1,44 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-
 export default function ContentBody({ content, canViewContent }) {
-  const viewerRef = useRef(null);
-  const viewerDivRef = useRef(null);
-
-  // ToastUI Viewer 초기화 (클라이언트 사이드에서만)
-  useEffect(() => {
-    if (typeof window === 'undefined') return; // SSR 방지
-    if (!viewerDivRef.current || viewerRef.current) return;
-    if (!content?.post?.body) return;
-
-    // 동적 import로 Viewer와 CSS 로드
-    Promise.all([
-      import('@toast-ui/editor/dist/toastui-editor-viewer'),
-      import('@toast-ui/editor/dist/toastui-editor-viewer.css')
-    ]).then(([viewerModule]) => {
-      const Viewer = viewerModule.default;
-      viewerRef.current = new Viewer({
-        el: viewerDivRef.current,
-        initialValue: content.post.body || '',
-      });
-    });
-
-    return () => {
-      if (viewerRef.current) {
-        viewerRef.current.destroy();
-        viewerRef.current = null;
-      }
-    };
-  }, [content]);
-
-  // content.post.body 변경 시 Viewer 업데이트
-  useEffect(() => {
-    if (typeof window === 'undefined') return; // SSR 방지
-    if (viewerRef.current && content?.post?.body !== undefined) {
-      viewerRef.current.setMarkdown(content.post.body);
-    }
-  }, [content?.post?.body]);
 
   return (
     <>
@@ -53,9 +15,49 @@ export default function ContentBody({ content, canViewContent }) {
         <div className="bg-white rounded-lg p-6 mb-8 border border-gray-200">
           <div className="prose prose-lg max-w-none">
             {canViewContent ? (
-              <div className="toastui-editor-viewer-wrapper">
-                <div ref={viewerDivRef} />
-              </div>
+              <>
+                {/* 포스트 파일 (이미지/동영상) */}
+                {content.post.postFiles && content.post.postFiles.length > 0 && (
+                  <div className="mt-6 space-y-4">
+                    {content.post.postFiles.map((fileUrl, index) => {
+                      // 파일 확장자로 이미지/동영상 판단
+                      const isImage = /\.(jpg|jpeg|png|gif|webp|svg)(\?.*)?$/i.test(fileUrl);
+                      const isVideo = /\.(mp4|webm|ogg|mov)(\?.*)?$/i.test(fileUrl);
+                      
+                      if (isImage) {
+                        return (
+                          <div key={index} className="my-4">
+                            <img
+                              src={fileUrl}
+                              alt={`콘텐츠 이미지 ${index + 1}`}
+                              className="w-full max-w-full h-auto rounded-lg border border-gray-200"
+                              style={{ maxWidth: '100%', height: 'auto' }}
+                            />
+                          </div>
+                        );
+                      } else if (isVideo) {
+                        return (
+                          <div key={index} className="my-4">
+                            <video
+                              src={fileUrl}
+                              controls
+                              className="w-full max-w-full h-auto rounded-lg border border-gray-200"
+                              style={{ maxWidth: '100%', height: 'auto' }}
+                            >
+                              비디오를 재생할 수 없습니다.
+                            </video>
+                          </div>
+                        );
+                      }
+                      return null;
+                    })}
+                  </div>
+                )}
+                {/* 본문 텍스트 */}
+                <div className="whitespace-pre-wrap text-gray-800 leading-relaxed">
+                  {content.post.body}
+                </div>
+              </>
             ) : (
               <div className="h-[300px] relative overflow-hidden bg-gray-50 rounded-lg">
                 {/* 스켈레톤 UI */}

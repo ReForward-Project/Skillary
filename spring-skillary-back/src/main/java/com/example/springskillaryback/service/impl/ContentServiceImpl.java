@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.scheduling.annotation.Scheduled;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.time.LocalDateTime;
@@ -331,23 +332,24 @@ public class ContentServiceImpl implements ContentService {
 
             if (!paidOrders.isEmpty()) {
                 // 테스트용 - 1분뒤
-                LocalDateTime deletedAt = LocalDateTime.now().plusMinutes(1);
+                // LocalDateTime deletedAt = LocalDateTime.now().plusMinutes(1);
+                LocalDateTime deletedAt = null;
 
                 // payment paid_at 최신일
-                // LocalDateTime latestPayDate = paidOrders.stream()
-                //         .map(order -> order.getPayment().getPaidAt())
-                //         .filter(date -> date != null)
-                //         .max(LocalDateTime::compareTo)
-                //         .orElse(LocalDateTime.now());
+                LocalDateTime latestPayDate = paidOrders.stream()
+                        .map(order -> order.getPayment().getPaidAt())
+                        .filter(date -> date != null)
+                        .max(LocalDateTime::compareTo)
+                        .orElse(LocalDateTime.now());
 
-                //  paid_at 최신일 기준 - 정산 10일 이전,이후 건 분기
-                // int paymentDay = latestPayDate.toLocalDate().getDayOfMonth();
-                // LocalDate paymentDate = latestPayDate.toLocalDate();
-                // if (paymentDay <= 9) {
-                //     deletedAt = paymentDate.plusMonths(2).withDayOfMonth(10).atTime(0, 0, 0);
-                // } else {
-                //     deletedAt = paymentDate.plusMonths(3).withDayOfMonth(10).atTime(0, 0, 0);
-                // }
+                // paid_at 최신일 기준 - 정산 10일 이전,이후 건 분기
+                int paymentDay = latestPayDate.toLocalDate().getDayOfMonth();
+                LocalDate paymentDate = latestPayDate.toLocalDate();
+                if (paymentDay <= 9) {
+                    deletedAt = paymentDate.plusMonths(2).withDayOfMonth(10).atTime(0, 0, 0);
+                } else {
+                    deletedAt = paymentDate.plusMonths(3).withDayOfMonth(10).atTime(0, 0, 0);
+                }
 
                 return deletedAt;
             }
@@ -356,8 +358,8 @@ public class ContentServiceImpl implements ContentService {
     }
 
 	/** 콘텐츠 단건결제 삭제 스케줄러 */
-    // @Scheduled(cron = "5 0 0 10 * ?") // 10일 00:00:05
-    @Scheduled(fixedDelay = 60000) // 테스트용 - 1분
+    @Scheduled(cron = "5 0 0 10 * ?") // 10일 00:00:05
+    // @Scheduled(fixedDelay = 60000) // 테스트용 - 1분
 	public void deleteScheduledContents() {
         log.info("[ContentService] deleteScheduledContents 스케줄러 진행");
 
