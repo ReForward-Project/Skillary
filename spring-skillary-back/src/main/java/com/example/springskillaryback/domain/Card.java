@@ -69,4 +69,8 @@ public class Card {
 		this.user = user;
 		this.isDefault = true;
 	}
+
+	public boolean isOwnedBy(User user) {
+		return this.user.equals(user);
+	}
 }

@@ -6,6 +6,7 @@ import { registerCard } from '@/api/tossPayments';
 import CardFooter from '../components/CardFooter';
 import CardList from '../components/CardList';
 import CardHeader from '../components/CardHeader';
+import CardAddButton from '../components/CardAddButton';
 import Loading from '@/components/Loading';
 
 
@@ -67,7 +68,7 @@ export default function CardListPage() {
         <div className="space-y-4">
           {cards.length > 0 ? (
             <>
-              <CardList cards={cards} withdrawCard={handleWithdrawCard}/>
+              <CardList cards={cards} handleWithdrawCard={handleWithdrawCard}/>
               
               {/* 추가 등록 버튼 (목록이 있을 때 소형 버튼) */}
               <button 

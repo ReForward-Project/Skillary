@@ -2,16 +2,16 @@ package com.example.springskillaryback.common.dto;
 
 import com.example.springskillaryback.domain.Order;
 
-public record SingleOrderResponseDto(
+public record PaymentOrderResponseDto(
 		String customerKey,
 		String orderId,
 		String creatorName,
 		String contentTitle,
 		int price
 ) {
-	public static SingleOrderResponseDto from(Order order) {
+	public static PaymentOrderResponseDto from(Order order) {
 		var content = order.getContent();
-		return new SingleOrderResponseDto(order.getUser().getCustomerKey().toString(),
+		return new PaymentOrderResponseDto(order.getUser().getCustomerKey().toString(),
 		                                  order.getOrderId().toString(),
 		                                  content.getCreator().getDisplayName(),
 		                                  content.getTitle(),

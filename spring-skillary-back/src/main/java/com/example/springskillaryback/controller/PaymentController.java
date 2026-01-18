@@ -1,18 +1,18 @@
 package com.example.springskillaryback.controller;
 
+import com.example.springskillaryback.common.dto.BillingOrderRequestDto;
 import com.example.springskillaryback.common.dto.CardRequestDto;
 import com.example.springskillaryback.common.dto.CardResponseDto;
-import com.example.springskillaryback.common.dto.CompleteBillingPaymentRequestDto;
+import com.example.springskillaryback.common.dto.CompleteBillingRequestDto;
 import com.example.springskillaryback.common.dto.CompleteBillingResponseDto;
 import com.example.springskillaryback.common.dto.CompletePaymentRequestDto;
 import com.example.springskillaryback.common.dto.CompletePaymentResponseDto;
 import com.example.springskillaryback.common.dto.CustomerKeyResponseDto;
 import com.example.springskillaryback.common.dto.OrderResponseDto;
 import com.example.springskillaryback.common.dto.PaymentResponseDto;
-import com.example.springskillaryback.common.dto.PlanOrderRequestDto;
 import com.example.springskillaryback.common.dto.PlanOrderResponseDto;
-import com.example.springskillaryback.common.dto.SingleOrderRequestDto;
-import com.example.springskillaryback.common.dto.SingleOrderResponseDto;
+import com.example.springskillaryback.common.dto.PaymentOrderRequestDto;
+import com.example.springskillaryback.common.dto.PaymentOrderResponseDto;
 import com.example.springskillaryback.domain.Order;
 import com.example.springskillaryback.domain.Payment;
 import com.example.springskillaryback.service.PaymentService;
@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/payments")
 public class PaymentController {
+	private static final String DEFAULT_USER_EMAIL = "email@email.com";
 	private final PaymentService paymentService;
 
 	@PostMapping("/customer-key")
@@ -47,8 +48,8 @@ public class PaymentController {
 		return ResponseEntity.ok(new CustomerKeyResponseDto(customerKey));
 	}
 
-	@PostMapping("/cards/create")
-	public ResponseEntity<CardResponseDto> createCard(
+	@PostMapping("/cards")
+	public ResponseEntity<Void> createCard(
 			@Valid
 			@RequestBody
 			CardRequestDto cardRequestDto
@@ -56,9 +57,9 @@ public class PaymentController {
 		var email = cardRequestDto.email();
 		var customerKey = cardRequestDto.customerKey();
 		var authKey = cardRequestDto.authKey();
-		var card = paymentService.createCard(email, customerKey, authKey);
-		return ResponseEntity.status(HttpStatus.CREATED)
-		                     .body(CardResponseDto.from(card));
+		paymentService.createCard(email, customerKey, authKey);
+		return ResponseEntity.noContent()
+		                     .build();
 	}
 
 	@GetMapping("/cards")
@@ -66,55 +67,52 @@ public class PaymentController {
 			@RequestParam(defaultValue = "0") Integer page,
 			@RequestParam(defaultValue = "10") Integer size
 	) {
-		return ResponseEntity.ok(paymentService.pagingCard(page, size)
+		return ResponseEntity.ok(paymentService.pagingCards(DEFAULT_USER_EMAIL, page, size)
 		                                       .map(CardResponseDto::from));
 	}
 
 	@GetMapping("/orders")
-	public ResponseEntity<Page<OrderResponseDto>> pagingOrder(
+	public ResponseEntity<Page<OrderResponseDto>> pagingOrders(
 			@RequestParam(defaultValue = "0") Integer page,
 			@RequestParam(defaultValue = "10") Integer size
 	) {
-		return ResponseEntity.ok(paymentService.pagingOrder(page, size)
-				                         .map(OrderResponseDto::from));
+		return ResponseEntity.ok(paymentService.pagingOrders(DEFAULT_USER_EMAIL, page, size)
+		                                       .map(OrderResponseDto::from));
 	}
 
-	@PostMapping("/orders/single")
-	public ResponseEntity<SingleOrderResponseDto> recordOrderSingle(
+	@PostMapping("/orders/payment")
+	public ResponseEntity<PaymentOrderResponseDto> paymentOrder(
 			@Valid
 			@RequestBody
-			SingleOrderRequestDto singleOrderRequestDto
+			PaymentOrderRequestDto paymentOrderRequestDto
 	) {
-		var email = singleOrderRequestDto.email();
-		var contentId = singleOrderRequestDto.contentId();
-		var order = paymentService.saveSingleOrder(email, contentId);
+		var email = paymentOrderRequestDto.email();
+		var contentId = paymentOrderRequestDto.contentId();
+		var order = paymentService.paymentOrder(email, contentId);
 		return ResponseEntity.status(HttpStatus.CREATED)
-		                     .body(SingleOrderResponseDto.from(order));
+		                     .body(PaymentOrderResponseDto.from(order));
 	}
 
-	@PostMapping("/orders/plan")
-	public ResponseEntity<PlanOrderResponseDto> recordOrderPlan(
+	@PostMapping("/orders/billing")
+	public ResponseEntity<PlanOrderResponseDto> billingOrder(
 			@Valid
 			@RequestBody
-			PlanOrderRequestDto planOrderRequestDto
+			BillingOrderRequestDto billingOrderRequestDto
 	) {
-		var email = planOrderRequestDto.email();
-		var planId = planOrderRequestDto.planId();
-		var order = paymentService.saveSubscriptionOrder(email, planId);
+		var email = billingOrderRequestDto.email();
+		var planId = billingOrderRequestDto.planId();
+		var order = paymentService.billingOrder(email, planId);
 		return ResponseEntity.status(HttpStatus.CREATED)
 		                     .body(PlanOrderResponseDto.from(order));
 	}
 
-	@PostMapping("/complete/single")
+	@PostMapping("/complete/payment")
 	public ResponseEntity<CompletePaymentResponseDto> completePayment(
 			@Valid
 			@RequestBody
 			CompletePaymentRequestDto completePaymentRequestDto
 	) {
-		Payment payment = paymentService.completeSinglePayment(
-				completePaymentRequestDto.paymentKey(),
-				completePaymentRequestDto.orderId(),
-				completePaymentRequestDto.amount());
+		Payment payment = paymentService.completePayment(completePaymentRequestDto);
 		return ResponseEntity.status(HttpStatus.CREATED)
 		                     .body(CompletePaymentResponseDto.from(payment));
 	}
@@ -123,14 +121,9 @@ public class PaymentController {
 	public ResponseEntity<CompleteBillingResponseDto> completeBilling(
 			@Valid
 			@RequestBody
-			CompleteBillingPaymentRequestDto completeBillingPaymentRequestDto
+			CompleteBillingRequestDto completeBillingRequestDto
 	) {
-		Payment payment = paymentService.completeBillingPayment(
-				completeBillingPaymentRequestDto.email(),
-				completeBillingPaymentRequestDto.customerKey(),
-				completeBillingPaymentRequestDto.orderId(),
-				completeBillingPaymentRequestDto.planName(),
-				completeBillingPaymentRequestDto.amount());
+		Payment payment = paymentService.completeBilling(completeBillingRequestDto);
 
 		return ResponseEntity.status(HttpStatus.CREATED)
 		                     .body(CompleteBillingResponseDto.from(payment));
@@ -141,44 +134,27 @@ public class PaymentController {
 			@RequestParam(defaultValue = "0") Integer page,
 			@RequestParam(defaultValue = "10") Integer size
 	) {
-		Page<PaymentResponseDto> response = paymentService.pagingPayments(page, size)
+		Page<PaymentResponseDto> response = paymentService.pagingPayments(DEFAULT_USER_EMAIL, page, size)
 		                                                  .map(PaymentResponseDto::from);
 		return ResponseEntity.ok()
 		                     .body(response);
 	}
 
-	@GetMapping("/{paymentId}")
-	public ResponseEntity<PaymentResponseDto> retrievePayment(
-			@PathVariable Byte paymentId
-	) {
-		if (paymentId == null)
-			throw new IllegalArgumentException("입력값 오류");
-		var result = PaymentResponseDto.from(paymentService.retrivePayment(paymentId));
-		return ResponseEntity.ok()
-		                     .body(result);
-	}
-
-	@DeleteMapping("/{paymentId}")
-	public ResponseEntity<Boolean> withdrawPayment(
-			@PathVariable Byte paymentId,
-			@RequestParam String cancelReason
-	) {
-		if (paymentId == null || cancelReason.isEmpty())
-			throw new IllegalArgumentException("입력값 오류");
-		boolean result = paymentService.withdrawPayment(paymentId, cancelReason);
-		return ResponseEntity.ok(result);
-	}
-
-	@GetMapping("/restart/{orderId}")
-	public ResponseEntity<?> restartOrder(
+	@GetMapping("/{orderId}")
+	public ResponseEntity<?> retrieveOrder(
 			@PathVariable String orderId
 	) {
-		if (orderId == null) throw new IllegalArgumentException("주문 정보 입력 값이 없습니다.");
-		Order order = paymentService.retrieveOrder(orderId);
-		if (order.isNotPending()) throw new IllegalArgumentException("주문을 처리할 수 없는 상태입니다.");
-		if (order.getContent() != null) return ResponseEntity.ok(SingleOrderResponseDto.from(order));
-		if (order.getSubscriptionPlan() != null) return ResponseEntity.ok(PlanOrderResponseDto.from(order));
-		throw new RuntimeException("시스템에 잘못된 값이 저장되어 있습니다...");
+		if (orderId == null)
+			throw new IllegalArgumentException("주문 정보 입력 값이 없습니다.");
+		Order order = paymentService.retrieveOrder(DEFAULT_USER_EMAIL, orderId);
+
+		if (order.isContent())
+			return ResponseEntity.ok(PaymentOrderResponseDto.from(order));
+
+		if (order.isPlan())
+			return ResponseEntity.ok(PlanOrderResponseDto.from(order));
+
+		throw new RuntimeException("시스템에 잘못된 값이 저장되어 있습니다.");
 	}
 
 	@DeleteMapping("/card/{cardId}")
@@ -187,7 +163,7 @@ public class PaymentController {
 	) {
 		if (cardId == null)
 			throw new IllegalArgumentException("입력값 오류");
-		boolean result = paymentService.withdrawCard(cardId);
-		return ResponseEntity.ok(result);
+		paymentService.withdrawCard(DEFAULT_USER_EMAIL, cardId);
+		return ResponseEntity.noContent().build();
 	}
 }

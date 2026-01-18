@@ -1,8 +1,11 @@
 package com.example.springskillaryback.common.dto;
 
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Positive;
+
 public record CompletePaymentRequestDto(
-		String email,
-		String orderId,
-		String paymentKey,
-		int amount
+		@NotEmpty String email,
+		@NotEmpty String orderId,
+		@NotEmpty String paymentKey,
+		@Positive int amount
 ) { }

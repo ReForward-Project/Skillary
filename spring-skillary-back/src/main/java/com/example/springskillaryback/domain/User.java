@@ -116,4 +116,8 @@ public class User {
 		cards.add(card);
 		return card;
 	}
+
+	public boolean verifyWith(String customerKey) {
+		return this.customerKey.toString().equals(customerKey);
+	}
 }

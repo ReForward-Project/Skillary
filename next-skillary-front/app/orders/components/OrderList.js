@@ -1,10 +1,14 @@
-import { restartOrder } from '@/api/payments';
+'use client';
+
+import { retrieveOrder } from '@/api/payments';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function OrderList({ orders }) {
+    const router = useRouter();
 
     const handleRestartOrder = async (orderId) => {
-        const res = await restartOrder(orderId);
+        const res = await retrieveOrder(orderId);
         if (res.planName)
             router.push(`/orders/billing?orderId=${orderId}`);
         else 

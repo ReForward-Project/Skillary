@@ -104,7 +104,7 @@ public class TossPaymentsClient {
 		return response.getBody();
 	}
 
-	public HttpStatusCode deleteBillingKey(String idempotencyKey, String billingKey) {
+	public int deleteBillingKey(String idempotencyKey, String billingKey) {
 		HttpHeaders headers = createHeaders(idempotencyKey);
 		HttpEntity<Void> entity = new HttpEntity<>(headers);
 
@@ -114,7 +114,7 @@ public class TossPaymentsClient {
 				entity,
 				JsonNode.class
 		);
-		return response.getStatusCode();
+		return response.getStatusCode().value();
 	}
 
 	private HttpHeaders createHeaders(String idempotencyKey) {

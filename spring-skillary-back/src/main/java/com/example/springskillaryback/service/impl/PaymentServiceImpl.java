@@ -1,23 +1,21 @@
 package com.example.springskillaryback.service.impl;
 
+import com.example.springskillaryback.common.dto.CompleteBillingRequestDto;
+import com.example.springskillaryback.common.dto.CompletePaymentRequestDto;
 import com.example.springskillaryback.common.util.TossPaymentsClient;
 import com.example.springskillaryback.domain.Card;
-import com.example.springskillaryback.domain.CardStatusEnum;
 import com.example.springskillaryback.domain.Content;
 import com.example.springskillaryback.domain.CreditMethodEnum;
 import com.example.springskillaryback.domain.CreditStatusEnum;
 import com.example.springskillaryback.domain.Order;
 import com.example.springskillaryback.domain.OrderStatusEnum;
 import com.example.springskillaryback.domain.Payment;
-import com.example.springskillaryback.domain.Subscribe;
-import com.example.springskillaryback.domain.SubscribeStatusEnum;
 import com.example.springskillaryback.domain.SubscriptionPlan;
 import com.example.springskillaryback.domain.User;
 import com.example.springskillaryback.repository.CardRepository;
 import com.example.springskillaryback.repository.ContentRepository;
 import com.example.springskillaryback.repository.OrderRepository;
 import com.example.springskillaryback.repository.PaymentRepository;
-import com.example.springskillaryback.repository.SubscribeRepository;
 import com.example.springskillaryback.repository.SubscriptionPlanRepository;
 import com.example.springskillaryback.repository.UserRepository;
 import com.example.springskillaryback.service.PaymentService;
@@ -37,9 +35,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @Transactional
-@Slf4j
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
 	private final PaymentRepository paymentRepository;
@@ -54,24 +52,35 @@ public class PaymentServiceImpl implements PaymentService {
 	@Override
 	public String getCustomerKey(String email) {
 		User user = findUserOrElseThrow(email);
-		return user.getCustomerKey().toString();
+		return user.getCustomerKey()
+		           .toString();
 	}
 
 	@Override
 	public Card createCard(String email, String customerKey, String authKey) {
 		User user = findUserOrElseThrow(email);
-		if (!user.getCustomerKey().toString().equals(customerKey))
+		if (!user.getCustomerKey()
+		         .toString()
+		         .equals(customerKey))
 			throw new IllegalArgumentException("로그인부터 다시 이용해주세요");
 
 		JsonNode response = tossPaymentsClient.issueBillingKey(authKey, customerKey);
 
-		String billingKey = response.path("billingKey").asString();
-		String cardNumber = response.path("cardNumber").asString();
-		String cardCompany = response.path("cardCompany").asString();
-		String cardType = response.path("card").path("cardType").asString();
-		String ownerType = response.path("card").path("ownerType").asString();
+		String billingKey = response.path("billingKey")
+		                            .asString();
+		String cardNumber = response.path("cardNumber")
+		                            .asString();
+		String cardCompany = response.path("cardCompany")
+		                             .asString();
+		String cardType = response.path("card")
+		                          .path("cardType")
+		                          .asString();
+		String ownerType = response.path("card")
+		                           .path("ownerType")
+		                           .asString();
 
-		cardRepository.resetDefaultStatus(user.getUserId().toString());
+		cardRepository.resetDefaultStatus(user.getUserId()
+		                                      .toString());
 		Card card = new Card(cardCompany, cardNumber, cardType, ownerType, billingKey, user);
 		cardRepository.save(card);
 		return user.addCard(card);
@@ -79,68 +88,69 @@ public class PaymentServiceImpl implements PaymentService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Card> pagingCard(int page, int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-		return cardRepository.findAll(pageable);
+	public Page<Card> pagingCards(String email, int page, int size) {
+		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt")
+		                                                   .descending());
+		User user = findUserOrElseThrow(email);
+		return cardRepository.findAllByUser(user, pageable);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Order> pagingOrder(int page, int size) {
-		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-		return orderRepository.findAll(pageable);
+	public Page<Order> pagingOrders(String email, int page, int size) {
+		User user = findUserOrElseThrow(email);
+		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt")
+		                                                   .descending());
+		return orderRepository.findAllByUser(user, pageable);
 	}
 
 	@Override
-	public Order saveSubscriptionOrder(String email, byte planId) {
+	public Order billingOrder(String email, byte planId) {
 		User user = findUserOrElseThrow(email);
 		SubscriptionPlan plan = findPlanOrElseThrow(planId);
+
 		if (user.isSubscribed(plan))
 			throw new RuntimeException("이미 구독중인 상품입니다.");
 
 		return orderRepository.save(new Order(
 				plan.getPrice(),
 				user,
-				plan,
-				LocalDateTime.now().plusMinutes(10)
+				plan
 		));
 	}
 
 	@Override
-	public Order saveSingleOrder(String email, byte contentId) {
+	public Order paymentOrder(String email, byte contentId) {
 		User user = findUserOrElseThrow(email);
 		Content content = findContentOrElseThrow(contentId);
+
 		if (user.hasContent(content))
 			throw new RuntimeException("해당 품목은 이미 구매하였습니다.");
+
 		return orderRepository.save(new Order(
 				content.getPrice(),
 				user,
-				content,
-				LocalDateTime.now().plusMinutes(10)
+				content
 		));
 	}
 
 	@Override
-	public Payment completeBillingPayment(
-			String email,
-			String customerKey,
-			String orderId,
-			String planName,
-			int credit
-	) {
-		Order order = findOrderOrElseThrow(orderId);
-		User user = findUserOrElseThrow(email);
-		SubscriptionPlan plan = order.getSubscriptionPlan();
+	public Payment completeBilling(CompleteBillingRequestDto completeBillingRequestDto) {
+		Order order = findOrderOrElseThrow(completeBillingRequestDto.orderId());
+		User user = findUserOrElseThrow(completeBillingRequestDto.email());
 
-		System.out.println();
-		System.out.println(order.getOrderId());
-		System.out.println(user.getUserId());
-		System.out.println(plan.getPlanId());
-		System.out.println();
-
-		if (plan == null || plan.getPrice() != credit || !user.getCustomerKey().toString().equals(customerKey)
-		    || !order.getUser().equals(user) || order.isPaid())
+		if (
+				!order.isSamePrice(completeBillingRequestDto.subscriptionFee())
+				|| !order.isOwnedBy(user)
+				|| order.isNotPending()
+				|| !user.verifyWith(completeBillingRequestDto.customerKey())
+		)
 			throw new IllegalArgumentException("잘못된 주문 정보입니다.");
+
+		if (order.isExpired()) {
+			order.expire();
+			throw new IllegalArgumentException("이미 만료된 주문입니다.");
+		}
 
 		Card defaultCard = cardRepository.findByUserAndIsDefaultTrue(user)
 		                                 .orElseThrow(() -> new RuntimeException("등록된 기본 카드가 없습니다."));
@@ -148,10 +158,10 @@ public class PaymentServiceImpl implements PaymentService {
 		var tossResponse = tossPaymentsClient.payWithBillingKey(
 				user.getIdempotencyKey().toString(),
 				defaultCard.getBillingKey(),
-				customerKey,
-				orderId,
-				planName,
-				credit
+				completeBillingRequestDto.customerKey(),
+				completeBillingRequestDto.orderId(),
+				completeBillingRequestDto.planName(),
+				completeBillingRequestDto.subscriptionFee()
 		);
 
 		String paymentKey = tossResponse.path("paymentKey").asString();
@@ -163,50 +173,38 @@ public class PaymentServiceImpl implements PaymentService {
 			throw new IllegalArgumentException("구독을 해지한 이후에 구독을 해주세요");
 		}
 
-		Payment payment = Payment.builder()
-		                         .user(order.getUser())
-		                         .paymentKey(paymentKey)
-		                         .order(order)
-		                         .creditStatus(CreditStatusEnum.PAID)
-		                         .credit(amount)
-		                         .creditMethod(creditMethod)
-		                         .paidAt(LocalDateTime.now())
-		                         .build();
+		Payment payment = new Payment(paymentKey, amount, order, creditMethod, user);
 
 		paymentRepository.save(payment);
 		order.complete();
-		subscriptionService.subscribe(user, plan);
+		subscriptionService.subscribe(user, order.getSubscriptionPlan());
 		return payment;
 	}
 
 	@Override
-	public Payment completeSinglePayment(
-			String paymentKey,
-			String orderId,
-			int credit
-	) {
-		Order order = findOrderOrElseThrow(orderId);
+	public Payment completePayment(CompletePaymentRequestDto completePaymentRequestDto) {
+		Order order = findOrderOrElseThrow(completePaymentRequestDto.orderId());
+		User user = findUserOrElseThrow(completePaymentRequestDto.email());
 
-		if (!order.verifyWith(credit))
-			throw new RuntimeException("주문 정보가 왜곡됐습니다.");
-		if (order.getCreatedAt().plusMinutes(10).isBefore(LocalDateTime.now()))
+		if (
+				!order.isSamePrice(completePaymentRequestDto.amount())
+				|| order.isNotPending()
+				|| !order.isOwnedBy(user)
+		)
+			throw new IllegalArgumentException("잘못된 주문 정보입니다.");
+
+		if (order.isExpired())
 			throw new IllegalArgumentException("이미 만료된 주문입니다.");
-		if (order.isPaid())
-			throw new IllegalArgumentException("이미 처리된 주문입니다.");
-		if (order.isNotPending())
-			throw new IllegalArgumentException("해당 주문은 처리될 수 없습니다.");
 
 		var tossResponse = tossPaymentsClient.confirm(
-				order.getUser()
-				     .getIdempotencyKey()
-				     .toString(),
-				paymentKey,
-				orderId,
-				credit
+				user.getIdempotencyKey().toString(),
+				completePaymentRequestDto.paymentKey(),
+				completePaymentRequestDto.orderId(),
+				completePaymentRequestDto.amount()
 		);
 
-		paymentKey = tossResponse.path("paymentKey").asString();
-		int totalAmount = tossResponse.path("totalAmount").asInt();
+		String paymentKey = tossResponse.path("paymentKey").asString();
+		int amount = tossResponse.path("totalAmount").asInt();
 		CreditMethodEnum creditMethod = CreditMethodEnum.fromMethod(tossResponse.path("method").asString());
 
 		if (paymentRepository.existsByPaymentKey(paymentKey)) {
@@ -214,71 +212,48 @@ public class PaymentServiceImpl implements PaymentService {
 			throw new IllegalArgumentException("동일한 상품은 재주문 할 수 있는 기간 이후에 주문해주세요.");
 		}
 
-		Payment payment = Payment.builder()
-		                         .user(order.getUser())
-		                         .paymentKey(paymentKey)
-		                         .order(order)
-		                         .creditStatus(CreditStatusEnum.PAID)
-		                         .credit(totalAmount)
-		                         .creditMethod(creditMethod)
-		                         .paidAt(LocalDateTime.now())
-		                         .build();
+		Payment payment = new Payment(paymentKey, amount, order, creditMethod, user);
+
 		paymentRepository.save(payment);
 		order.complete();
-
 		return payment;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Page<Payment> pagingPayments(int page, int size) {
+	public Page<Payment> pagingPayments(String email, int page, int size) {
 		Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
 		return paymentRepository.findAll(pageable);
 	}
 
 	@Override
-	@Transactional(readOnly = true)
-	public Payment retrivePayment(byte paymentId) {
-		return paymentRepository.findById(paymentId)
-		                        .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 지불 정보입니다."));
-	}
+	public void withdrawCard(String email, byte cardId) {
+		User user = findUserOrElseThrow(email);
+		Card card = cardRepository.findById(cardId)
+		                          .orElseThrow(() -> new IllegalArgumentException("시스템에 등록되지 않은 카드입니다."));
 
-	@Override
-	public boolean withdrawPayment(byte paymentId, String cancelReason) {
-		Payment payment = findPaymentOrElseThrow(paymentId);
+		if (!card.isOwnedBy(user))
+			throw new IllegalArgumentException("가지고 있지 않은 카드입니다.");
 
-		if (payment.getCreditStatus() == CreditStatusEnum.CANCELED)
-			throw new IllegalStateException("이미 취소된 결제입니다.");
+		int statusCode = tossPaymentsClient.deleteBillingKey(
+				card.getUser().getIdempotencyKey().toString(),
+				card.getBillingKey()
+		);
 
-		var tossResponse = tossPaymentsClient.withdraw(
-				payment.getUser().getIdempotencyKey().toString(),
-				payment.getPaymentKey(), cancelReason);
-
-		if ("CANCELED".equals(tossResponse.path("status").asString())) {
-			payment.cancel();
-			return true;
-		}
-
-		return false;
-	}
-
-	@Override
-	public boolean withdrawCard(byte cardId) {
-		Card card = cardRepository.findById(cardId).
-				orElseThrow(() -> new IllegalArgumentException("시스템에 등록되지 않은 카드입니다."));
-		int statusCode = tossPaymentsClient.deleteBillingKey(card.getUser().getIdempotencyKey().toString(),
-		                                                     card.getBillingKey()).value();
-		if (statusCode == 200) {
+		if (statusCode == 200)
 			cardRepository.delete(card);
-			return true;
-		}
-		return false;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public Order retrieveOrder(String orderId) {
-		return findOrderOrElseThrow(orderId);
+	public Order retrieveOrder(String email, String orderId) {
+		User user = findUserOrElseThrow(email);
+		Order order = findOrderOrElseThrow(orderId);
+		if (!order.isOwnedBy(user))
+			throw new IllegalArgumentException("주문자가 아닙니다.");
+		if (order.isNotPending())
+			throw new IllegalArgumentException("다시 주문을 생성해주세요.");
+		return order;
 	}
 
 	private SubscriptionPlan findPlanOrElseThrow(byte planId) {
@@ -293,7 +268,7 @@ public class PaymentServiceImpl implements PaymentService {
 
 	private Order findOrderOrElseThrow(String orderId) {
 		return orderRepository.findById(UUID.fromString(orderId))
-		                                    .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 주문정보입니다."));
+		                      .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 주문정보입니다."));
 	}
 
 	private Content findContentOrElseThrow(byte contentId) {
@@ -301,17 +276,13 @@ public class PaymentServiceImpl implements PaymentService {
 		                        .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 컨텐트입니다."));
 	}
 
-	private Payment findPaymentOrElseThrow(byte paymentId) {
-		return paymentRepository.findById(paymentId)
-		                        .orElseThrow(() -> new IllegalArgumentException("등록되지 않은 지불 정보입니다."));
-	}
-
 	@Transactional
 	@Scheduled(fixedDelay = 60000)
 	public void expireOrders() {
 		List<Order> expiredOrders = orderRepository.findAllByStatus(OrderStatusEnum.PENDING);
 		expiredOrders.stream()
-		             .filter(order -> order.getExpiredAt().isBefore(LocalDateTime.now()))
+		             .filter(order -> order.getExpiredAt()
+		                                   .isBefore(LocalDateTime.now()))
 		             .forEach(Order::expire);
 	}
 

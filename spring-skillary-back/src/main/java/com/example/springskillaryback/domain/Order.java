@@ -3,8 +3,6 @@ package com.example.springskillaryback.domain;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -25,6 +23,8 @@ import static jakarta.persistence.EnumType.STRING;
 @NoArgsConstructor
 @Getter
 public class Order {
+	private static final int EXPIRATION_MINUTES = 10;
+
 	@Id
 	@Column(columnDefinition = "BINARY(16)")
 	private UUID orderId;
@@ -61,18 +61,20 @@ public class Order {
 	@OneToOne(mappedBy = "order")
 	private Payment payment;
 
-	public Order(int amount, User user, SubscriptionPlan subscriptionPlan, LocalDateTime expiredAt) {
+	private Order(int amount, User user) {
 		this.amount = amount;
 		this.user = user;
-		this.subscriptionPlan = subscriptionPlan;
-		this.expiredAt = expiredAt;
+		this.expiredAt = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
 	}
 
-	public Order(int amount, User user, Content content, LocalDateTime expiredAt) {
-		this.amount = amount;
-		this.user = user;
+	public Order(int amount, User user, SubscriptionPlan subscriptionPlan) {
+		this(amount, user);
+		this.subscriptionPlan = subscriptionPlan;
+	}
+
+	public Order(int amount, User user, Content content) {
+		this(amount, user);
 		this.content = content;
-		this.expiredAt = expiredAt;
 	}
 
 	public boolean verifyWith(int credit) {
@@ -98,5 +100,29 @@ public class Order {
 
 	public boolean isPaid() {
 		return this.status == OrderStatusEnum.PAID;
+	}
+
+	public boolean isPlan() {
+		return this.subscriptionPlan != null;
+	}
+
+	public boolean isContent() {
+		return this.content != null;
+	}
+
+	public boolean isSamePrice(int price) {
+		if (this.subscriptionPlan != null)
+			return this.subscriptionPlan.getPrice() == price;
+		if (this.content != null)
+			return this.content.getPrice() == price;
+		return false;
+	}
+
+	public boolean isOwnedBy(User user) {
+		return this.user.equals(user);
+	}
+
+	public boolean isExpired() {
+		return this.expiredAt.isBefore(LocalDateTime.now());
 	}
 }

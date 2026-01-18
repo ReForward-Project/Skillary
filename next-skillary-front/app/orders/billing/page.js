@@ -3,7 +3,7 @@
 import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-import { confirmBillingPay, planOrder, restartOrder } from '@/api/payments';
+import { completeBilling, billingOrder, retrieveOrder } from '@/api/payments';
 import CardFailPage from '@/components/CardFailPage';
 import Loading from '@/components/Loading';
 
@@ -25,8 +25,8 @@ export default function BillingOrderPage() {
   const { data: orderResponse, error, isLoading } = useSWR(
     (!orderId && !planId) ? null : ['plan-order', orderId, planId],
     async () => {
-      if (orderId) return await restartOrder(orderId)
-      if (planId) return await planOrder(planId);
+      if (orderId) return await retrieveOrder(orderId)
+      if (planId) return await billingOrder(planId);
       return null;
     }
   )
@@ -45,11 +45,11 @@ export default function BillingOrderPage() {
 
   const handlePayment = async () => {
     try {
-      const result = await confirmBillingPay({
+      const result = await completeBilling({
         customerKey: orderResponse.customerKey,
         orderId: orderResponse.orderId,
         planName: orderResponse.planName,
-        amount: orderResponse.price
+        subscriptionFee: orderResponse.price
       })
       const paymentKey = result.paymentKey;
       const orderId = result.orderId;

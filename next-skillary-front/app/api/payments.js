@@ -11,13 +11,13 @@ export async function getCustomerKey(email) {
   )).customerKey;
 }
 
-export async function singleOrder(contentId) {
+export async function paymentOrder(contentId) {
   return await baseRequest(
     'POST',
     {},
-    '/payments/orders/single',
+    '/payments/orders/payment',
     JSON.stringify({
-      email: 'email@email.com', // 임시
+      email: 'email@email.com',
       contentId: contentId
     }),
     '주문 생성 중 오류가 발생했습니다.',
@@ -25,11 +25,11 @@ export async function singleOrder(contentId) {
   );
 }
 
-export async function planOrder(planId) {
+export async function billingOrder(planId) {
   return await baseRequest(
     'POST',
     {},
-    '/payments/orders/plan',
+    '/payments/orders/billing',
     JSON.stringify({
       email: 'email@email.com', // 임시
       planId: planId
@@ -40,11 +40,14 @@ export async function planOrder(planId) {
 }
 
 
-export async function createCard(customerKey, authKey) {
-  return await baseRequest(
+export async function createCard(
+  customerKey,
+  authKey
+) {
+  const res = await baseRequest(
     'POST',
     {},
-    `/payments/cards/create`,
+    `/payments/cards`,
     JSON.stringify({
       email: 'email@email.com',
       customerKey: customerKey,
@@ -53,13 +56,18 @@ export async function createCard(customerKey, authKey) {
     '서버에 결제 수단 등록 실패하였습니다.',
     true
   );
+  return res === null;
 }
 
-export async function pagingCard(page = 0, size = 10) {
+
+export async function pagingCard(
+  page = 0,
+  size = 10
+) {
   return await baseRequest(
     'GET',
     {},
-    `/payments/cards?page=${page}&size=${size}`, // 백엔드 엔드포인트에 맞게 수정
+    `/payments/cards?page=${page}&size=${size}`,
     null,
     "카드 목록을 불러오는데 실패했습니다.",
     true
@@ -67,11 +75,11 @@ export async function pagingCard(page = 0, size = 10) {
 }
 
 
-export async function confirmBillingPay({
+export async function completeBilling({
   customerKey,
   orderId,
   planName,
-  amount
+  subscriptionFee
 }) {
   const response = await baseRequest(
     'POST',
@@ -82,21 +90,20 @@ export async function confirmBillingPay({
       email: 'email@email.com',
       orderId: orderId,
       planName: planName,
-      amount: amount
+      subscriptionFee: subscriptionFee
     }),
     '플랜 결제 실패',
     true
   );
-  if (response === undefined || !response) {
-    console.log('2-1');
+  
+  if (response === undefined || !response)
     return null;
-  }
 
   alert("결제가 완료되었습니다!");
   return response;
 }
 
-export async function completeSinglePay(
+export async function completePayment(
   orderId,
   paymentKey,
   amount
@@ -104,7 +111,7 @@ export async function completeSinglePay(
   return await baseRequest(
     'POST',
     {},
-    `/payments/complete/single`,
+    `/payments/complete/payment`,
     JSON.stringify({
       email: 'email@email.com',
       paymentKey: paymentKey,
@@ -123,39 +130,49 @@ export async function pagingPayments(
     'GET',
     {},
     `/payments?page=${page}&size=${size}`,
-    null
+    null,
+    "결제 내역을 불러오는데 실패했습니다.",
+    true
   );
 }
 
-export async function pagingOrder(
-  page = 0, size = 10
+export async function pagingOrders(
+  page = 0,
+  size = 10
 ) {
   return await baseRequest(
     'GET',
     {},
     `/payments/orders?page=${page}&size=${size}`,
-    null
+    null,
+    "주문 내역을 불러오는데 실패했습니다.",
+    true
   );
 }
 
-export async function restartOrder(
+export async function retrieveOrder(
   orderId
 ) {
   return await baseRequest(
     'GET',
     {},
-    `/payments/restart/${orderId}`,
-    null
+    `/payments/${orderId}`,
+    null,
+    "주문 내역을 불러오는데 실패했습니다.",
+    true
   );
 }
 
 export async function withdrawCard(
   cardId
 ) {
-  return await baseRequest(
+  const res = await baseRequest(
     'DELETE',
     {},
     `/payments/card/${cardId}`,
-    null
+    JSON.stringify({
+      email: 'email@email.com'
+    })
   );
+  return res === null;
 }

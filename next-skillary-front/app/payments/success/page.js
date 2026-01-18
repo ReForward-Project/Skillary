@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { completeSinglePay, completeBillingPay } from '@/api/payments';
+import { completePayment } from '@/api/payments';
 import Loading from '@/components/Loading';
 
 export default function Success() {
@@ -33,11 +33,10 @@ const searchParams = useSearchParams();
             called.current = true;
 
             try {
-                const result = await completeSinglePay(orderId, paymentKey, amount);
-                console.log('result: ', result);
+                const result = await completePayment(orderId, paymentKey, amount);
                 setPaymentResult(result);
             } catch (e) {
-                router.push(`/payments/fail?message=${encodeURIComponent(e.message || '싱글 페이 승인 실패')}`);
+                router.push(`/payments/fail?message=${e.message}`);
             }
         };
 

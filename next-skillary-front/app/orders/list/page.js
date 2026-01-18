@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { pagingOrder } from '@/api/payments';
+import { pagingOrders } from '@/api/payments';
 import OrderList from '../components/OrderList';
 
 export default function OrdersListPage() {
@@ -15,7 +15,7 @@ export default function OrdersListPage() {
       if (isFetched.current) return;
 
       try {
-        const response = await pagingOrder(0, 10);
+        const response = await pagingOrders(0, 10);
         setOrders(response.content || []);
       } catch (error) {
         console.error("주문 내역 로딩 실패:", error);
