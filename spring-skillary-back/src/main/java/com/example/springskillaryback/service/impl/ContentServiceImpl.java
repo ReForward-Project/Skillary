@@ -88,9 +88,10 @@ public class ContentServiceImpl implements ContentService {
 
 			createPostFiles(post, requestDto.post().postFiles());
 			savedContent.setPost(post);
+            savedContent = contentRepository.save(savedContent);
 		}
 
-		return toDto(savedContent, false);
+        return toDto(savedContent, false);
 	}
 
 	/** 콘텐츠 수정 */
@@ -319,7 +320,7 @@ public class ContentServiceImpl implements ContentService {
     }
 
 	/** 콘텐츠 단건결제 삭제 스케줄러 */
-    // @Scheduled(cron = "0 1 0 10 * ?") // 10일 00:01
+    // @Scheduled(cron = "5 0 0 10 * ?") // 10일 00:00:05
     @Scheduled(fixedDelay = 60000) // 테스트용 - 1분
 	public void deleteScheduledContents() {
         log.info("[ContentService] deleteScheduledContents 스케줄러 진행");
@@ -332,6 +333,8 @@ public class ContentServiceImpl implements ContentService {
                     // 관련 파일 삭제 후 콘텐츠 삭제
                     deleteAssociatedFiles(content);
                     contentRepository.delete(content);
+                    log.info("[ContentService] 단건결제 스케줄 삭제 확인 : contentId={}, deletedAt={}",
+                            content.getContentId(), content.getDeletedAt());
                 } catch (Exception e) {
                     log.error("[ContentService] 단건결제 스케줄 삭제 오류 확인 : contentId={}, deletedAt={} error={}",
                         content.getContentId(), content.getDeletedAt(), e.getMessage());

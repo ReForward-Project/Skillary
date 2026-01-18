@@ -98,14 +98,6 @@ export default function ContentListTestPage() {
     router.push(`/test/content/${contentIdInput}/view`);
   };
 
-  const handleDeleteContent = () => {
-    if (!contentIdInput) {
-      alert('콘텐츠 ID를 입력해주세요.');
-      return;
-    }
-    router.push(`/test/content/${contentIdInput}/delete`);
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -117,12 +109,6 @@ export default function ContentListTestPage() {
         {/* 액션 버튼 */}
         <div className="mb-6 bg-white rounded-lg border border-gray-200 p-4">
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/test/content/create')}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"
-            >
-              콘텐츠 생성
-            </button>
             
             <div className="flex items-center gap-2 flex-1">
               <input
@@ -139,10 +125,10 @@ export default function ContentListTestPage() {
                 상세 이동
               </button>
               <button
-                onClick={handleDeleteContent}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 font-semibold"
+                onClick={() => router.push('/test/content/create')}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-semibold"
               >
-                삭제 이동
+                콘텐츠 생성
               </button>
             </div>
           </div>

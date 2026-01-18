@@ -15,6 +15,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
 
@@ -52,7 +54,8 @@ public class Order {
 	private SubscriptionPlan subscriptionPlan;
 
 	@ManyToOne
-	@JoinColumn(name = "content_id")
+    @OnDelete(action = OnDeleteAction.SET_NULL) // 스케줄러 유료콘텐츠 삭제시 필요
+    @JoinColumn(name = "content_id")
 	private Content content;
 
 	@OneToOne

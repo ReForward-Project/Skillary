@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import PopularCard from '../components/PopularCard';
 import { getContents, getCategories, getContentsByCategory, getPopularContents } from '../api/contents';
+import { formatDate } from '../utils/formatUtils';
 
 export default function ContentsPage() {
   const [contents, setContents] = useState([]);
@@ -38,8 +39,8 @@ export default function ContentsPage() {
         let data;
         // 정렬 기준에 따라 API 선택
         if (selectedCategory) {
-          // 카테고리별 조회 (카테고리는 항상 최신순)
-          data = await getContentsByCategory(selectedCategory, page, size);
+          // 카테고리별 조회 (정렬 파라미터 포함)
+          data = await getContentsByCategory(selectedCategory, page, size, sortBy);
         } else if (sortBy === 'popular') {
           // 인기별 조회
           data = await getPopularContents(page, size);
@@ -101,15 +102,6 @@ export default function ContentsPage() {
     }
   };
 
-  // 날짜 포맷팅
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    return `${year}. ${month}. ${day}.`;
-  };
 
   // 가격 포맷팅
   const formatPrice = (price) => {
@@ -186,31 +178,29 @@ export default function ContentsPage() {
 
             {/* 정렬 옵션 및 카테고리 필터 */}
             <div className="flex items-center gap-4 ml-auto">
-              {/* 정렬 옵션 (카테고리 선택 시에는 숨김) */}
-              {!selectedCategory && (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleSortChange('latest')}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                      sortBy === 'latest'
-                        ? 'bg-black text-white'
-                        : 'bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    최신순
-                  </button>
-                  <button
-                    onClick={() => handleSortChange('popular')}
-                    className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
-                      sortBy === 'popular'
-                        ? 'bg-black text-white'
-                        : 'bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100'
-                    }`}
-                  >
-                    인기순
-                  </button>
-                </div>
-              )}
+              {/* 정렬 옵션 */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleSortChange('latest')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                    sortBy === 'latest'
+                      ? 'bg-black text-white'
+                      : 'bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  최신순
+                </button>
+                <button
+                  onClick={() => handleSortChange('popular')}
+                  className={`px-4 py-2 rounded-lg text-sm font-semibold transition ${
+                    sortBy === 'popular'
+                      ? 'bg-black text-white'
+                      : 'bg-gray-50 border border-gray-300 text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  인기순
+                </button>
+              </div>
 
               {/* 카테고리 필터 */}
               <div className="relative">

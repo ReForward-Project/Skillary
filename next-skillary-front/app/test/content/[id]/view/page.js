@@ -138,9 +138,7 @@ export default function ContentViewTestPage({ params }) {
 
   // 콘텐츠 수정
   const handleEdit = () => {
-    if (content && content.creatorId) {
-      router.push(`/creators/${content.creatorId}/create?edit=true&contentId=${contentId}`);
-    }
+    router.push(`/test/content/create?edit=true&contentId=${contentId}`);
   };
 
   // 콘텐츠 삭제
