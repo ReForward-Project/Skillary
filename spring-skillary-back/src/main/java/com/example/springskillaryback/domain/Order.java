@@ -133,4 +133,12 @@ public class Order {
 	public boolean isExpired() {
 		return this.expiredAt.isBefore(LocalDateTime.now());
 	}
+
+	public Creator getCreator() {
+		if (this.subscriptionPlan != null)
+			return this.subscriptionPlan.getCreator();
+		if (this.content != null)
+			return this.content.getCreator();
+		return null;
+	}
 }

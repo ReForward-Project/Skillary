@@ -48,17 +48,18 @@ public class SpringSkillaryBackApplication {
 			                                                                       .description("test")
 			                                                                       .creator(creator)
 			                                                                       .build());
-			var post = postRepository.save(Post.builder()
-			                                   .body("본문 입니다.")
-			                                   .creator(creator)
-			                                   .build());
 			var content = contentRepository.save(Content.builder()
 			                                            .title("컨텐트 테스트")
 			                                            .price(1000)
-			                                            .post(post)
 			                                            .creator(creator)
+			                                            .description("test")
 			                                            .category(CategoryEnum.IT)
 			                                            .build());
+			var post = postRepository.save(Post.builder()
+			                                   .body("본문 입니다.")
+			                                   .creator(creator)
+			                                   .content(content)
+			                                   .build());
 		};
 	}
 }
