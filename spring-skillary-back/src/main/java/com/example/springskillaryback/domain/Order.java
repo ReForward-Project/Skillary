@@ -73,6 +73,7 @@ public class Order {
 		this.amount = amount;
 		this.user = user;
 		this.expiredAt = LocalDateTime.now().plusMinutes(EXPIRATION_MINUTES);
+		this.status = OrderStatusEnum.PENDING;
 	}
 
 	public Order(int amount, User user, SubscriptionPlan subscriptionPlan) {

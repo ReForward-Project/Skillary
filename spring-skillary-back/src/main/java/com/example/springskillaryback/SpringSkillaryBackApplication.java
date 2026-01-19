@@ -16,6 +16,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 public class SpringSkillaryBackApplication {
@@ -30,12 +31,18 @@ public class SpringSkillaryBackApplication {
 			CreatorRepository creatorRepository,
 			UserRepository userRepository,
 			ContentRepository contentRepository,
-			PostRepository postRepository
+			PostRepository postRepository,
+			PasswordEncoder passwordEncoder
 	) {
 		return args -> {
-			var user = userRepository.save(User.builder()
+			var user2 = userRepository.save(User.builder()
 			                                   .email("email@email.com")
-			                                   .password("1234")
+			                                   .password(passwordEncoder.encode("123456abc!"))
+			                                   .nickname("hello")
+			                                   .build());
+			var user = userRepository.save(User.builder()
+			                                   .email("email2@email.com")
+			                                   .password(passwordEncoder.encode("123456abc!"))
 			                                   .nickname("hello")
 			                                   .build());
 			var creator = creatorRepository.save(Creator.builder()
