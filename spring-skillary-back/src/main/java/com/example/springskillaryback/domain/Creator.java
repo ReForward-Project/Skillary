@@ -80,6 +80,7 @@ public class Creator {
 		SubscriptionPlan plan = plans.stream().filter(eachPlan -> eachPlan.getPlanId().equals(planId))
 		                                .findFirst()
 		                                .orElseThrow();
-		return plans.remove(plan);
+		plan.inactive();
+		return !plan.isActive();
 	}
 }

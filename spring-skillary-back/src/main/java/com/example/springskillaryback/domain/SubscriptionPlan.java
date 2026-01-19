@@ -54,4 +54,8 @@ public class SubscriptionPlan {
 		this.creator = creator;
 		this.isActive = true;
 	}
+
+	public void inactive() {
+		this.isActive = false;
+	}
 }
