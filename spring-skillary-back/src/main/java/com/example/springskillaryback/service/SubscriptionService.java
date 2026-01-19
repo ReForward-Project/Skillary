@@ -12,6 +12,8 @@ public interface SubscriptionService {
 
 	Page<SubscriptionPlan> pagingSubscriptionPlan(Byte userId, int page, int size);
 
+	SubscriptionPlan getSubscriptionPlan(Byte planId);
+
 	Subscribe subscribe(User user, SubscriptionPlan subscriptionPlan);
 
 	void deletePlan(byte userId, byte planId);

@@ -36,6 +36,12 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 	}
 
 	@Override
+	public SubscriptionPlan getSubscriptionPlan(Byte planId) {
+		return subscriptionPlanRepository.findById(planId)
+				.orElseThrow(() -> new IllegalArgumentException("시스템에 없는 플랜입니다."));
+	}
+
+	@Override
 	public Page<SubscriptionPlan> pagingSubscriptionPlan(Byte userId, int page, int size) {
 		Creator creator = findUserOrElseThrow(userId).getCreator();
 		if (creator == null)

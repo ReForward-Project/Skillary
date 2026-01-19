@@ -1,5 +1,6 @@
 package com.example.springskillaryback.controller;
 
+import com.example.springskillaryback.common.dto.CreateSubscriptionRequestDto;
 import com.example.springskillaryback.common.dto.SubscribeResponseDto;
 import com.example.springskillaryback.common.dto.SubscriptionPlanResponseDto;
 import com.example.springskillaryback.common.dto.SubscriptionResponseDto;
@@ -31,14 +32,23 @@ public class SubscriptionController {
 	@PostMapping
 	public ResponseEntity<SubscriptionResponseDto> createSubscription(
 			Authentication authentication,
-			@RequestBody String planName,
-			@RequestBody String description,
-			@RequestBody int price
+			@RequestBody CreateSubscriptionRequestDto createSubscriptionRequestDto
 	) {
 		Byte userId = Byte.valueOf((String) Objects.requireNonNull(authentication.getPrincipal()));
-		var plan = subscriptionService.createSubscription(userId, planName, description, price);
+		var plan = subscriptionService.createSubscription(
+				userId,
+				createSubscriptionRequestDto.planName(),
+				createSubscriptionRequestDto.description(),
+				createSubscriptionRequestDto.price());
 		return ResponseEntity.status(HttpStatus.CREATED)
 				.body(new SubscriptionResponseDto(plan.getName(), plan.getDescription(), plan.getPrice()));
+	}
+
+	@GetMapping("/{planId}")
+	public ResponseEntity<SubscriptionPlanResponseDto> getSubscription(
+			@PathVariable Byte planId
+	) {
+		return ResponseEntity.ok(SubscriptionPlanResponseDto.from(subscriptionService.getSubscriptionPlan(planId)));
 	}
 
 	@GetMapping("/plans")

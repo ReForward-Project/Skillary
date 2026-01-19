@@ -6,11 +6,11 @@ export async function createSubscriptionPlan(planName, description, price) {
     'POST',
     {},
     '/subscriptions',
-    {
+    JSON.stringify({
       planName,
       description,
       price
-    },
+    }),
     "구독 플랜 생성 실패",
     true
   );
@@ -24,6 +24,20 @@ export async function pagingSubscriptionPlans(page = 0, size = 10) {
     `/subscriptions/plans?page=${page}&size=${size}`,
     null,
     "구독 플랜 목록 불러오기 실패",
+    true
+  );
+  return result;
+}
+
+export async function getSubscriptionPlan(planId) {
+  const result = await baseRequest(
+    'GET',
+    {},
+    `/subscriptions/${planId}`,
+    JSON.stringify({
+      planId: planId
+    }),
+    "시스템에 등록되어있지 않습니다.",
     true
   );
   return result;

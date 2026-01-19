@@ -171,17 +171,26 @@ export default function CreatorProfilePage({ params }) {
                 </div>
               </div>
 
-              {/* 구독 버튼 */}
-              <button
-                onClick={() => handleSubscribe()}
-                className={`px-6 py-3 rounded-lg font-semibold transition ${
-                  isSubscribed
-                    ? 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
-                    : 'bg-white text-black hover:bg-gray-100'
-                }`}
-              >
-                {isSubscribed ? '구독 중' : '구독하기'}
-              </button>
+              {/* 구독 버튼 및 나의 플랜 버튼 */}
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                <button
+                  onClick={() => handleSubscribe()}
+                  className={`px-6 py-3 rounded-lg font-semibold transition ${
+                    isSubscribed
+                      ? 'bg-white bg-opacity-20 text-white hover:bg-opacity-30'
+                      : 'bg-white text-black hover:bg-gray-100'
+                  }`}
+                >
+                  {isSubscribed ? '구독 중' : '구독하기'}
+                </button>
+
+                <button
+                  onClick={() => router.push('/creators/plans')}
+                  className="px-6 py-3 rounded-lg font-semibold bg-black bg-opacity-30 text-white border border-white border-opacity-30 hover:bg-opacity-40 transition"
+                >
+                  나의 플랜
+                </button>
+              </div>
             </div>
           </div>
         </div>
