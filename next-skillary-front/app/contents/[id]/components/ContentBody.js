@@ -2,17 +2,19 @@
 
 import { useRef, useState, useEffect } from 'react';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Thumbs, Pagination } from 'swiper/modules';
+import { Navigation, Thumbs } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/thumbs';
-import 'swiper/css/pagination';
 
 export default function ContentBody({ content, canViewContent }) {
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
+  const [videoThumbsSwiper, setVideoThumbsSwiper] = useState(null);
   const videoSwiperRef = useRef(null);
   const mainSwiperRef = useRef(null);
+  const videoRefs = useRef([]);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const [activeTab, setActiveTab] = useState('images');
 
   // 이미지와 비디오 분리
@@ -35,6 +37,11 @@ export default function ContentBody({ content, canViewContent }) {
       setActiveTab('videos');
     }
   }, [imageFiles.length, videoFiles.length]);
+
+  // 비디오 파일이 변경될 때 ref 배열 초기화
+  useEffect(() => {
+    videoRefs.current = videoRefs.current.slice(0, videoFiles.length);
+  }, [videoFiles.length]);
 
   return (
     <>
@@ -77,7 +84,7 @@ export default function ContentBody({ content, canViewContent }) {
                               : 'text-gray-500 hover:text-gray-700'
                           }`}
                         >
-                          비디오 ({videoFiles.length})
+                          영상 ({videoFiles.length})
                           {activeTab === 'videos' && (
                             <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-blue-600"></span>
                           )}
@@ -96,7 +103,7 @@ export default function ContentBody({ content, canViewContent }) {
                             modules={[Navigation, Thumbs]}
                             spaceBetween={10}
                             slidesPerView={1}
-                            navigation={imageFiles.length > 1}
+                            navigation={false}
                             thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
                             loop={imageFiles.length > 1}
                             autoHeight={true}
@@ -113,10 +120,6 @@ export default function ContentBody({ content, canViewContent }) {
                               setActiveIndex(index);
                             }}
                             className="main-image-swiper rounded-xl overflow-hidden shadow-lg mb-4"
-                            style={{
-                              '--swiper-navigation-color': '#fff',
-                              '--swiper-navigation-size': '24px',
-                            }}
                           >
                             {imageFiles.map((fileUrl, index) => (
                               <SwiperSlide key={index}>
@@ -177,41 +180,55 @@ export default function ContentBody({ content, canViewContent }) {
                       {/* 비디오 패널 */}
                       {(activeTab === 'videos' || !showTabs) && videoFiles.length > 0 && (
                         <div className={showTabs && activeTab !== 'videos' ? 'hidden' : ''}>
+                          {/* 메인 비디오 스와이퍼 */}
                           <Swiper
                             ref={videoSwiperRef}
-                            modules={[Navigation, Pagination]}
+                            modules={[Navigation, Thumbs]}
                             spaceBetween={20}
                             slidesPerView={1}
-                            navigation={videoFiles.length > 1}
-                            pagination={videoFiles.length > 1 ? {
-                              clickable: true,
-                              dynamicBullets: true,
-                            } : false}
+                            navigation={false}
+                            thumbs={{ swiper: videoThumbsSwiper && !videoThumbsSwiper.destroyed ? videoThumbsSwiper : null }}
                             loop={videoFiles.length > 1}
                             autoHeight={true}
                             onSlideChange={(swiper) => {
+                              const index = videoFiles.length > 1 && swiper.loopedSlides 
+                                ? swiper.realIndex 
+                                : swiper.activeIndex;
+                              setActiveVideoIndex(index);
+                              
+                              // 모든 비디오 일시정지
+                              videoRefs.current.forEach((videoRef) => {
+                                if (videoRef && !videoRef.paused) {
+                                  videoRef.pause();
+                                }
+                              });
+                              
                               // 슬라이드 변경 시 높이 업데이트
                               setTimeout(() => {
                                 swiper.updateAutoHeight();
                               }, 100);
                             }}
                             onInit={(swiper) => {
+                              const index = videoFiles.length > 1 && swiper.loopedSlides 
+                                ? swiper.realIndex 
+                                : swiper.activeIndex;
+                              setActiveVideoIndex(index);
                               // 초기화 시 높이 업데이트
                               setTimeout(() => {
                                 swiper.updateAutoHeight();
                               }, 100);
                             }}
-                            className="video-swiper rounded-xl overflow-hidden shadow-lg"
-                            style={{
-                              '--swiper-navigation-color': '#3b82f6',
-                              '--swiper-navigation-size': '28px',
-                              '--swiper-pagination-color': '#3b82f6',
-                            }}
+                            className="video-swiper rounded-xl overflow-hidden shadow-lg mb-4"
                           >
                             {videoFiles.map((fileUrl, index) => (
                               <SwiperSlide key={index}>
                                 <div className="relative w-full bg-black rounded-xl overflow-hidden">
                                   <video
+                                    ref={(el) => {
+                                      if (el) {
+                                        videoRefs.current[index] = el;
+                                      }
+                                    }}
                                     src={fileUrl}
                                     controls
                                     className="w-full h-auto max-h-[800px]"
@@ -237,6 +254,54 @@ export default function ContentBody({ content, canViewContent }) {
                               </SwiperSlide>
                             ))}
                           </Swiper>
+
+                          {/* 비디오 썸네일 갤러리 */}
+                          {videoFiles.length > 1 && (
+                            <Swiper
+                              onSwiper={setVideoThumbsSwiper}
+                              modules={[Thumbs]}
+                              spaceBetween={8}
+                              slidesPerView={5}
+                              freeMode={true}
+                              watchSlidesProgress={true}
+                              breakpoints={{
+                                640: {
+                                  slidesPerView: 6,
+                                },
+                                1024: {
+                                  slidesPerView: 8,
+                                },
+                              }}
+                              className="thumbs-swiper mt-3"
+                            >
+                              {videoFiles.map((fileUrl, index) => {
+                                const isActive = activeVideoIndex === index;
+                                return (
+                                  <SwiperSlide key={index}>
+                                    <div className={`relative w-full aspect-square bg-black rounded-lg overflow-hidden cursor-pointer border-2 transition-all duration-200 ${
+                                      isActive 
+                                        ? 'border-blue-500 opacity-100 shadow-md' 
+                                        : 'border-transparent opacity-60 hover:border-blue-500 hover:opacity-100'
+                                    }`}>
+                                      <video
+                                        src={fileUrl}
+                                        muted
+                                        playsInline
+                                        className="w-full h-full object-cover"
+                                        preload="metadata"
+                                      />
+                                      {/* 비디오 썸네일 재생 아이콘 */}
+                                      <div className="absolute inset-0 flex items-center justify-center">
+                                        <svg className="w-8 h-8 text-white opacity-80" fill="currentColor" viewBox="0 0 24 24">
+                                          <path d="M8 5v14l11-7z"/>
+                                        </svg>
+                                      </div>
+                                    </div>
+                                  </SwiperSlide>
+                                );
+                              })}
+                            </Swiper>
+                          )}
                         </div>
                       )}
                     </div>

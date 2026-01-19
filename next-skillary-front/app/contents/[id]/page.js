@@ -159,12 +159,9 @@ export default function ContentDetailPage({ params }) {
       await deleteContent(contentId);
       console.log('[DELETE] 콘텐츠 삭제 완료');
       
-      // 삭제 후 콘텐츠 정보 다시 조회하여 상태 확인
-      const updatedContent = await getContent(contentId);
-      console.log('[GET] 삭제 후 콘텐츠 정보:', updatedContent);
-      
-      if (updatedContent.deletedAt) {
+      if (preview.deletedAt) {
         // 삭제 예정으로 설정된 경우
+        const updatedContent = await getContent(contentId);
         setContent(updatedContent);
         alert('콘텐츠가 삭제 예정으로 설정되었습니다.');
       } else {
