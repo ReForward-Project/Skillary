@@ -46,7 +46,7 @@ public class SpringSkillaryBackApplication {
 			var user = userRepository.save(User.builder()
 			                                   .email("email2@email.com")
 			                                   .password(passwordEncoder.encode("123456abc!"))
-			                                   .nickname("hello")
+			                                   .nickname("hello3")
 			                                   .build());
 
             var user1 = userRepository.save(User.builder()
