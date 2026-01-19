@@ -198,27 +198,27 @@ export default function ContentDetailPage({ params }) {
               수정하기
             </button>
           )}
-          {content.badgeType === 'price' && (
+          {/* {content.badgeType === 'price' && ( */}
             <button 
-              onClick={() => router.push(`/orders/payment?contentId=1`)}
+              onClick={() => router.push(`/orders/payment?contentId=${1}`)}
               className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
             >
               구매하기 {content.price}
             </button>
-          )}
-          {content.badgeType === 'badge' && content.badge === '구독자 전용' && (
+          {/* )} */}
+          {/* {content.badgeType === 'badge' && content.badge === '구독자 전용' && ( */}
             <button 
               onClick={() => router.push(`/orders/billing?planId=1`)}
               className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition text-center block"
             >
               구독하기
             </button>
-          )}
-          {content.badge === '무료' && (
+          {/* )} */}
+          {/* {content.badge === '무료' && ( */}
             <button className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition">
               콘텐츠 보기
             </button>
-          )}
+          {/* )} */}
           </div>
           {/* 댓글 섹션 */}
           <CommentSection
