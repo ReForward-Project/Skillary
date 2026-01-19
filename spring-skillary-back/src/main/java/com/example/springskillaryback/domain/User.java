@@ -115,11 +115,14 @@ public class User {
 	@JoinColumn(name = "customer_key")
 	private List<Card> cards = new ArrayList<>();
   
-  public Optional<Subscribe> getSubscribe(byte planId) {
-  return subscribes.stream()
-                   .filter(Subscribe::isActive)
-                   .filter(subscribe -> subscribe.getSubscriptionPlan().getPlanId().equals(planId))
-                   .findFirst();
+	public Optional<Subscribe> getSubscribe(byte planId) {
+		return subscribes.stream()
+		                 .filter(Subscribe::isActive)
+		                 .filter(subscribe -> subscribe.getSubscriptionPlan()
+		                                               .getPlanId()
+		                                               .equals(planId))
+		                 .findFirst();
+	}
 
 	public boolean hasContent(Content content) {
 		return contents.contains(content);

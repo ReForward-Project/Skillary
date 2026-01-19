@@ -33,10 +33,8 @@ public class SubscriptionServiceImpl implements SubscriptionService {
 	private final SubscriptionPlanRepository subscriptionPlanRepository;
 
 	@Override
-	public Subscribe subscribe(byte userId, byte planId) {
-		User user = findUserOrElseThrow(userId);
-		SubscriptionPlan plan = findPlanOrElseThrow(planId);
-		if (user.getSubscribe(planId).isPresent())
+	public Subscribe subscribe(User user, SubscriptionPlan plan) {
+		if (user.getSubscribe(plan.getPlanId()).isPresent())
 			throw new IllegalArgumentException("해당 회원은 이미 구독을 하고 있습니다.");
 		Subscribe subscribe = new Subscribe(user, plan);
 		return subscribeRepository.save(subscribe);

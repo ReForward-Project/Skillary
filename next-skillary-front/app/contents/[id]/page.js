@@ -219,6 +219,7 @@ export default function ContentDetailPage({ params }) {
               콘텐츠 보기
             </button>
           )}
+          </div>
           {/* 댓글 섹션 */}
           <CommentSection
             contentId={id}
