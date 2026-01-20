@@ -24,7 +24,7 @@ public class SecurityConfig {
 	@Value("${CORS_ALLOWED_ORIGINS}")
 	private List<String> allowedOrigins;
   
-  private final JwtAuthenticationFilter jwtAuthenticationFilter;
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
   
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) {
@@ -36,7 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/error", "/api/auth/register", "/api/auth/login"
                                 , "/api/auth/send-confirm", "/api/auth/send-code", "/api/auth/check-nickname"
                                 , "/api/auth/refresh", "/api/auth/logout"
-                                , "/api/contents/**", "/api/subscriptions/**"
+                                , "/api/contents/**"
                         ).permitAll()
                         .anyRequest().authenticated()
 				)
@@ -59,13 +59,13 @@ public class SecurityConfig {
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {
 		CorsConfiguration configuration = new CorsConfiguration();
-		configuration.setAllowedOrigins(List.of("http://localhost:3000")); // 프론트 주소 허용
+		configuration.setAllowedOrigins(allowedOrigins); // 프론트 주소 허용
 		configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
 		configuration.setAllowedHeaders(List.of("*"));
 		configuration.setAllowCredentials(true);
-    configuration.setMaxAge(3600L);
-  
-    configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
+	    configuration.setMaxAge(3600L);
+
+	    configuration.setExposedHeaders(List.of("Authorization", "Set-Cookie"));
 
 		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
 		source.registerCorsConfiguration("/**", configuration);

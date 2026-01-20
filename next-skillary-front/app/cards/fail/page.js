@@ -1,9 +1,11 @@
 "use client";
 
+import { Suspense } from 'react'; // Suspense 추가
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function CardFailPage() {
+// 1. 실제 UI와 로직을 담당하는 컴포넌트
+function CardFailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -61,5 +63,14 @@ export default function CardFailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 2. 빌드 시 에러 방지를 위한 메인 Export 컴포넌트
+export default function CardFailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">로딩 중...</div>}>
+      <CardFailContent />
+    </Suspense>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
+import { Suspense } from 'react'; // Suspense 추가
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
-export default function CardFailPage() {
+// 1. 실제 UI와 로직을 담당하는 컴포넌트 (useSearchParams 사용)
+function FailContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -50,7 +52,7 @@ export default function CardFailPage() {
             </button>
             <Link
               href="/auth/my-page"
-              className="w-full bg-white text-gray-500 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all border border-gray-200"
+              className="w-full bg-white text-gray-500 py-4 rounded-2xl font-bold text-lg hover:bg-gray-100 transition-all border border-gray-200 text-center"
             >
               마이페이지로 이동
             </Link>
@@ -64,5 +66,14 @@ export default function CardFailPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+// 2. 빌드 에러 방지를 위한 메인 Export 컴포넌트
+export default function CardFailPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">잠시만 기다려 주세요...</div>}>
+      <FailContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react'; // Suspense 추가
 import useSWR from 'swr';
 import { useRouter, useSearchParams } from 'next/navigation';
 
@@ -14,8 +15,8 @@ import OrderDescriptionSection from '../components/OrderDescriptionSection';
 import OrderPayExecution from '../components/OrderPayExecution';
 import OrderLayout from '../components/OrderLayout';
 
-
-export default function BillingOrderPage() {
+// 실제 결제 로직 컴포넌트
+function BillingContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -33,7 +34,6 @@ export default function BillingOrderPage() {
 
   if (isLoading) return <Loading loadingMessage='주문 정보를 로딩중입니다...'/>
 
-  // 구독 플랜 또는 콘텐츠가 없으면 에러 표시
   if (!orderResponse) {
     return <CardFailPage
       errorCode='NOT_FOUND'
@@ -64,11 +64,8 @@ export default function BillingOrderPage() {
   };
 
   return (
-  <>
     <OrderLayout
-      orderHeader={
-        <OrderHeader />
-      }
+      orderHeader={<OrderHeader />}
       orderSummary={
         <OrderSummary
           title='구독 콘텐츠'
@@ -100,6 +97,14 @@ export default function BillingOrderPage() {
           isSticky={true}
         />
       }/>
-    </>
+  );
+}
+
+// 빌드 에러 해결을 위한 메인 페이지 컴포넌트
+export default function BillingOrderPage() {
+  return (
+    <Suspense fallback={<Loading loadingMessage='결제 페이지를 불러오는 중입니다...' />}>
+      <BillingContent />
+    </Suspense>
   );
 }

@@ -12,7 +12,6 @@ export async function getCustomerKey() {
 }
 
 export async function paymentOrder(contentId) {
-  console.log('호출 ?');
   return await baseRequest(
     'POST',
     {},
