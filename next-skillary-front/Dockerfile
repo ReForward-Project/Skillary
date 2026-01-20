@@ -5,16 +5,15 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# 의존성 파일 복사
-COPY package*.json ./
+ARG NEXT_PUBLIC_FRONT_API_URL
+ENV NEXT_PUBLIC_FRONT_API_URL=${NEXT_PUBLIC_FRONT_API_URL}
 
-# 의존성 설치
+COPY package*.json ./
 RUN npm ci
 
-# 소스 코드 복사
 COPY . .
 
-# Next.js 빌드
+# 2. 이 명령이 실행될 때 위에서 설정한 ENV 값이 코드에 주입됩니다.
 RUN npm run build
 
 # ========================================

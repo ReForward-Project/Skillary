@@ -5,11 +5,13 @@ set -e
 # 1. 변수 설정 (사용자 계정명.)
 DOCKER_USER="star1431"
 TAG="latest"
+NEXT_PUBLIC_FRONT_API_URL=""
 
 docker buildx build \
     --platform linux/amd64 \
+    --build-arg NEXT_PUBLIC_FRONT_API_URL=$NEXT_PUBLIC_FRONT_API_URL \
     -t $DOCKER_USER/next-skillary:$TAG ./next-skillary-front \
-    --push
+    --push 
 
 docker buildx build \
     --platform linux/amd64 \
