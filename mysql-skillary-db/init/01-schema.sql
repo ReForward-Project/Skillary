@@ -275,11 +275,11 @@ CREATE TABLE IF NOT EXISTS creator_settlements (
     settlement_status VARCHAR(20) NOT NULL DEFAULT 'PENDING',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     creator_creator_id TINYINT NOT NULL,
-    settlement_run_run_id TINYINT NULL,
+    run_id TINYINT NULL,
     CONSTRAINT fk_creator_settlements_creator_id
         FOREIGN KEY (creator_creator_id) REFERENCES creators (creator_id),
     CONSTRAINT fk_creator_settlements_run_id
-        FOREIGN KEY (settlement_run_run_id) REFERENCES settlement_runs (run_id),
+        FOREIGN KEY (run_id) REFERENCES settlement_runs (run_id),
     INDEX idx_creator_settlement_status_created (settlement_status, created_at DESC)
 )
 ENGINE=InnoDB
