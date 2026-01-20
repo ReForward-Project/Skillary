@@ -67,7 +67,17 @@ public class SpringSkillaryBackApplication {
                                                 .nickname("hello2")
                                                 .build());
 
-			var creator = creatorRepository.save(Creator.builder()
+            var roleCreator = roleRepository.findByRole(RoleEnum.ROLE_CREATOR);
+            var roleAdmin = roleRepository.findByRole(RoleEnum.ROLE_ADMIN);
+            admin.getRoles().add(roleAdmin);
+            user.getRoles().add(roleCreator);
+            user1.getRoles().add(roleCreator);
+            userRepository.saveAndFlush(admin);
+            userRepository.saveAndFlush(user);
+            userRepository.saveAndFlush(user1);
+
+
+            var creator = creatorRepository.save(Creator.builder()
 			                                            .displayName("테스트 이름")
 			                                            .user(user)
                     .category(CategoryEnum.IT)
@@ -78,6 +88,7 @@ public class SpringSkillaryBackApplication {
                                                         .user(user1)
                     .category(CategoryEnum.ART)
                                                         .build());
+
 
 			var subscriptionPlan = subscriptionPlanRepository.save(SubscriptionPlan.builder()
 			                                                                       .name("테스트플랜")
