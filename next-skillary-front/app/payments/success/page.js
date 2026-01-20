@@ -1,12 +1,13 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { completePayment } from '@/api/payments';
 import Loading from '@/components/Loading';
 
-export default function Success() {
-const searchParams = useSearchParams();
+// useSearchParams를 사용하는 내부 컴포넌트
+function SuccessContent() {
+    const searchParams = useSearchParams();
     const router = useRouter();
     const [paymentResult, setPaymentResult] = useState(null);
     const called = useRef(false);
@@ -82,5 +83,14 @@ const searchParams = useSearchParams();
                 </button>
             </div>
         </main>
+    );
+}
+
+// Suspense로 감싼 메인 컴포넌트
+export default function Success() {
+    return (
+        <Suspense fallback={<Loading loadingMessage="결제 정보를 확인 중입니다..." />}>
+            <SuccessContent />
+        </Suspense>
     );
 }

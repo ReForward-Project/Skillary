@@ -1,14 +1,16 @@
 'use client';
 
-import { useState, use, useRef, useEffect } from 'react';
+import { useState, use, useRef, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getCurrentCreator } from '@/api/creator';
 import { createContent, updateContent, getContent, getCategories } from '@/api/contents';
 import { uploadImage, uploadVideo } from '@/api/files';
 import { pagingSubscriptionPlans } from '@/api/subscriptions';
+import Loading from '@/components/Loading';
 
-export default function CreateContentPage({ params }) {
+// useSearchParams를 사용하는 내부 컴포넌트
+function CreateContentForm({ params }) {
   const { id } = use(params);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -859,5 +861,18 @@ export default function CreateContentPage({ params }) {
         </form>
       </div>
     </div>
+  );
+}
+
+// Suspense로 감싼 메인 컴포넌트
+export default function CreateContentPage({ params }) {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Loading loadingMessage="페이지를 로딩 중입니다..." />
+      </div>
+    }>
+      <CreateContentForm params={params} />
+    </Suspense>
   );
 }

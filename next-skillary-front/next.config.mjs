@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone', // Docker 빌드를 위한 standalone 출력 모드
   eslint: {
     ignoreDuringBuilds: true,
   },
