@@ -16,7 +16,7 @@ public class RoleSeeder implements ApplicationRunner {
     private final RoleRepository roleRepository;
 
     @Override
-    @Profile("local")
+    @Profile("dev")
     @Transactional
     public void run(ApplicationArguments args) {
         seed(RoleEnum.ROLE_USER);
