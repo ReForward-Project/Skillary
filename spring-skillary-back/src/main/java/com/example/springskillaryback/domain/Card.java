@@ -11,6 +11,7 @@ import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
+import jakarta.persistence.JoinColumn;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -41,7 +42,9 @@ public class Card {
 	private LocalDateTime createdAt;
 
 	@ManyToOne
+	@JoinColumn(name = "user_id")
 	private User user;
+
 	@Column(nullable = false)
 	private String cardNumber;  // 마스킹된 카드번호
 
