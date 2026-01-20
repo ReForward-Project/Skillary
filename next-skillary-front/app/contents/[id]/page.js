@@ -112,6 +112,28 @@ export default function ContentDetailPage({ params }) {
     }
   };
 
+  // 구매하기 버튼 클릭 핸들러
+  const handlePurchase = () => {
+    if (!isLoggedIn) {
+      if (confirm('로그인이 필요합니다.\n로그인 화면으로 이동하시겠습니까?')) {
+        router.push('/auth/login');
+      }
+      return;
+    }
+    router.push(`/orders/payment?contentId=${id}`);
+  };
+
+  // 구독하기 버튼 클릭 핸들러
+  const handleSubscribe = () => {
+    if (!isLoggedIn) {
+      if (confirm('로그인이 필요합니다.\n로그인 화면으로 이동하시겠습니까?')) {
+        router.push('/auth/login');
+      }
+      return;
+    }
+    router.push(`/orders/billing?planId=${content.planId}`);
+  };
+
   // 콘텐츠 삭제
   const handleDelete = async () => {
     if (!confirm('콘텐츠를 삭제하시겠습니까?')) return;
@@ -137,12 +159,9 @@ export default function ContentDetailPage({ params }) {
       await deleteContent(contentId);
       console.log('[DELETE] 콘텐츠 삭제 완료');
       
-      // 삭제 후 콘텐츠 정보 다시 조회하여 상태 확인
-      const updatedContent = await getContent(contentId);
-      console.log('[GET] 삭제 후 콘텐츠 정보:', updatedContent);
-      
-      if (updatedContent.deletedAt) {
+      if (preview.deletedAt) {
         // 삭제 예정으로 설정된 경우
+        const updatedContent = await getContent(contentId);
         setContent(updatedContent);
         alert('콘텐츠가 삭제 예정으로 설정되었습니다.');
       } else {
@@ -167,14 +186,19 @@ export default function ContentDetailPage({ params }) {
       {loading ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="flex flex-col items-center gap-4">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-gray-300 border-t-black mb-4"></div>
             <p className="text-gray-600">콘텐츠를 불러오는 중...</p>
           </div>
         </div>
       ) : error || !content ? (
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-black mb-4">콘텐츠를 찾을 수 없습니다</h1>
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-red-50 mb-4">
+              <svg className="w-10 h-10 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-black mb-2">콘텐츠를 찾을 수 없습니다</h3>
             <Link href="/contents" className="text-blue-600 hover:underline">
               콘텐츠 목록으로 돌아가기
             </Link>
@@ -216,7 +240,7 @@ export default function ContentDetailPage({ params }) {
               )}
               {!isOwner && content?.price && !isPurchased && (
                 <button 
-                  onClick={() => router.push(`/orders/payment?contentId=${id}`)}
+                  onClick={handlePurchase}
                   className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
                 >
                   구매하기 ( ₩ {content.price.toLocaleString('ko-KR')} )
@@ -224,7 +248,7 @@ export default function ContentDetailPage({ params }) {
               )}
               {!isOwner && content?.planId && !isSubscribed && (
                 <button 
-                  onClick={() => router.push(`/orders/billing?planId=${content.planId}`)}
+                  onClick={handleSubscribe}
                   className="flex-1 bg-black text-white px-6 py-3 rounded-lg font-semibold hover:bg-gray-800 transition"
                 >
                   {subscriptionPlan?.planName || '구독하기'}{subscriptionPlan?.price ? ` ( ₩ ${subscriptionPlan.price.toLocaleString('ko-KR')} )` : '' }
