@@ -45,19 +45,18 @@ export async function listCreators() {
   );
 }
 
-
 /**
- * 크리에이터 상세 조회
- * @returns {Promise} 해당 크리에이터의 상세 정보 
- * (creatorId, displayName, introduction, profile, followCount, createdAt, isDeleted)
+ * 추천 크리에이터 목록 조회 (구독자 수 순)
+ * - 백엔드: GET /api/creators/recommended (public)
+ * - 응답: [{ creatorId, displayName, introduction, category, profile, followCount, contentCount, isDeleted }]
  */
-export async function getCreatorDetail(creatorId) {
+export async function getRecommendedCreators() {
   return await baseRequest(
     'GET',
     {},
-    `/creators/${creatorId}`,
+    '/creators/recommended',
     null,
-    '크리에이터 정보를 불러오는데 실패했습니다.',
+    '추천 크리에이터 목록을 불러오는데 실패했습니다.',
     false
   );
 }

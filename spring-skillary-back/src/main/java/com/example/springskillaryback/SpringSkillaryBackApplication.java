@@ -80,11 +80,13 @@ public class SpringSkillaryBackApplication {
             var creator = creatorRepository.save(Creator.builder()
 			                                            .displayName("테스트 이름")
 			                                            .user(user)
+                    .category(CategoryEnum.IT)
 			                                            .build());
 
             var creator1 = creatorRepository.save(Creator.builder()
                                                         .displayName("크리에이터2")
                                                         .user(user1)
+                    .category(CategoryEnum.ART)
                                                         .build());
 
 
